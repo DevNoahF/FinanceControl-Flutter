@@ -63,7 +63,7 @@ void main() {
     expect(novo.email, usuario.email);
 
     print("Dados após mudanças nos campos");
-    print(usuario.toJson());
+    print(novo.toJson());
 
   });
   

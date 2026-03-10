@@ -62,7 +62,7 @@ class Usuario{
     DateTime? updated_at,
   }){
     return Usuario(
-      id: id ?? this.id,
+      id:this.id,
       nome: nome ?? this.nome,
       sobrenome: sobrenome ?? this.sobrenome,
       email: email ?? this.email,
