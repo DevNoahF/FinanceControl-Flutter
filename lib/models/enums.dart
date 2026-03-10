@@ -10,3 +10,11 @@ enum CategoryType {
   health,
   other
 }
+
+enum Banco {
+  santander,
+  inter,
+  nubank,
+  itau,
+  outro,
+}
