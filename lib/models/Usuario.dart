@@ -69,7 +69,7 @@ class Usuario{
       senha: senha ?? this.senha,
       profissao: profissao ?? this.profissao,
       idade: idade ?? this.idade,
-      created_at: this.created_at,
+      created_at: created_at,
       updated_at: updated_at ?? this.updated_at
     );
   }
