@@ -10,9 +10,6 @@ class Cadastro extends StatelessWidget{
             color: Colors.white,
             child: Center(child: Image.asset("assets/Fundo.jpeg"),),
           ))
-          BoxDecoration(
-            color: Color.fromRGBO(1, 46, 52, 59)
-          )
         ],
       ),
     );

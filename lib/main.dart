@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'pages/cadastro.dart'; // importa o arquivo da sua tela
+import 'pages/login.dart'; // importa o arquivo da sua tela
 import 'pages/dashboard.dart';
 
 void main() {
@@ -11,10 +13,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Finanças',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(scaffoldBackgroundColor: const Color(0xFFE0E0E0)),
-      home: const HomeScreen(),
+      title: 'Finance Control',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
+      home: const Login(),
     );
   }
 }
