@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/cadastro.dart'; // importa o arquivo da sua tela
 import 'pages/login.dart'; // importa o arquivo da sua tela
+import 'pages/dashboard.dart';
 
 void main() {
   runApp(const MyApp());
