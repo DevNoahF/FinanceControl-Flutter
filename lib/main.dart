@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/dashboard.dart';
+import 'pages/cadastro.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,6 +16,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(scaffoldBackgroundColor: const Color(0xFFE0E0E0)),
       home: const HomeScreen(),
+      routes: {
+        '/dashboard': (context) => const HomeScreen(),
+        '/cadastro': (context) => Cadastro(),
+      },
     );
   }
 }
