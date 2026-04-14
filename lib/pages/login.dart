@@ -1,24 +1,7 @@
 import 'package:flutter/material.dart';
 
-class Cadastro extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cadastro'),
-        backgroundColor: const Color(0xFFE0E0E0),
-        elevation: 0,
-      ),
-      body: Row(
-        children: [
-          Expanded(
-            child: Container(
-              color: Colors.white,
-              child: Center(child: Image.asset("assets/Fundo.jpeg")),
-            ),
-          ),
-        ],
-  const Cadastro({super.key});
+class Login extends StatelessWidget {
+  const Login({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +40,6 @@ class Cadastro extends StatelessWidget {
                       direction: isWide ? Axis.horizontal : Axis.vertical,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Left panel — logo
                         Expanded(
                           flex: 5,
                           child: Container(
@@ -71,7 +53,7 @@ class Cadastro extends StatelessWidget {
                               children: [
                                 const SizedBox(height: 8),
                                 const Text(
-                                  'Crie sua conta',
+                                  'Seja bem-vindo\nde volta',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 41,
@@ -91,8 +73,6 @@ class Cadastro extends StatelessWidget {
                             ),
                           ),
                         ),
-
-                        // Right panel — cadastro form
                         Expanded(
                           flex: 5,
                           child: Container(
@@ -106,7 +86,7 @@ class Cadastro extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 const Text(
-                                  'Cadastre-se',
+                                  'Login',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 34,
@@ -116,65 +96,52 @@ class Cadastro extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 22),
-
-                                // Row: Nome + Sobrenome
-                                Row(
-                                  children: const [
-                                    Expanded(
-                                      child: _FieldColumn(
-                                        label: 'Nome',
-                                        hintText: '',
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: _FieldColumn(
-                                        label: 'Sobrenome',
-                                        hintText: '',
-                                      ),
-                                    ),
-                                  ],
+                                const Text(
+                                  'E-mail',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
-                                const SizedBox(height: 14),
-
-                                // Row: Profissão + Data de nascimento
-                                Row(
-                                  children: const [
-                                    Expanded(
-                                      child: _FieldColumn(
-                                        label: 'Profissão',
-                                        hintText: '',
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: _FieldColumn(
-                                        label: 'Data de nascimento',
-                                        hintText: '',
-                                        keyboardType: TextInputType.datetime,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-
-                                // Email (full width)
-                                const _FieldColumn(
-                                  label: 'Email',
-                                  hintText: '',
+                                const SizedBox(height: 10),
+                                const _LoginField(
+                                  hintText: 'Digite seu e-mail',
                                   keyboardType: TextInputType.emailAddress,
                                 ),
-                                const SizedBox(height: 14),
-
-                                // Senha (full width)
-                                const _FieldColumn(
-                                  label: 'Senha',
-                                  hintText: '',
+                                const SizedBox(height: 18),
+                                const Text(
+                                  'Senha',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                const _LoginField(
+                                  hintText: 'Digite sua senha',
                                   obscureText: true,
                                 ),
-                                const SizedBox(height: 20),
-
-                                // Cadastrar button
+                                const SizedBox(height: 6),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    onPressed: () {},
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.white70,
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: const Text(
+                                      'Esqueceu a senha?',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
                                 SizedBox(
                                   height: 38,
                                   child: ElevatedButton(
@@ -189,7 +156,7 @@ class Cadastro extends StatelessWidget {
                                         fontWeight: FontWeight.w400,
                                       ),
                                     ),
-                                    child: const Text('Cadastrar'),
+                                    child: const Text('Entrar'),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
@@ -200,7 +167,7 @@ class Cadastro extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 10),
                                 const Text(
-                                  'Ou faça login',
+                                  'Ou cadastra-se',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Colors.white,
@@ -225,46 +192,8 @@ class Cadastro extends StatelessWidget {
   }
 }
 
-/// Label + TextField empilhados verticalmente
-class _FieldColumn extends StatelessWidget {
-  const _FieldColumn({
-    required this.label,
-    required this.hintText,
-    this.keyboardType,
-    this.obscureText = false,
-  });
-
-  final String label;
-  final String hintText;
-  final TextInputType? keyboardType;
-  final bool obscureText;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 6),
-        _CadastroField(
-          hintText: hintText,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-        ),
-      ],
-    );
-  }
-}
-
-class _CadastroField extends StatelessWidget {
-  const _CadastroField({
+class _LoginField extends StatelessWidget {
+  const _LoginField({
     required this.hintText,
     this.keyboardType,
     this.obscureText = false,
