@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 final appRouter = GoRouter(
   initialLocation: '/home',
   refreshListenable: authService,
-  redirect: (_, state) {
+  redirect: (context, state) {
     final isAuthenticated = authService.isAuthenticated;
     final isLoginRoute = state.matchedLocation == '/login';
     final isCadastroRoute = state.matchedLocation == '/cadastro';
@@ -26,15 +26,15 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/login',
-      builder: (_, __) => const Login(),
+      builder: (context, state) => const Login(),
     ),
     GoRoute(
       path: '/cadastro',
-      builder: (_, __) => const Cadastro(),
+      builder: (context, state) => const Cadastro(),
     ),
     GoRoute(
       path: '/home',
-      builder: (_, __) => const HomeScreen(),
+      builder: (context, state) => const HomeScreen(),
     ),
   ],
 );
