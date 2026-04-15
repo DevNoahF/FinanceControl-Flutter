@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/cadastro.dart'; // importa o arquivo da sua tela
-import 'pages/login.dart'; // importa o arquivo da sua tela
+import 'package:finance_control/core/router/app_router.dart';
 
 
 void main() {
@@ -12,12 +11,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Finance Control',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const Cadastro(),
+      routerConfig: appRouter,
     );
   }
 }

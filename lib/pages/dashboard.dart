@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finance_control/core/auth/auth_service.dart';
 
 class Transacao {
   final String titulo;
@@ -115,6 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: const Color(0xFFE0E0E0),
         elevation: 0,
         actions: [
+          IconButton(
+            onPressed: authService.logout,
+            icon: const Icon(Icons.logout, color: Colors.black87),
+            tooltip: 'Sair',
+          ),
           const Padding(
             padding: EdgeInsets.only(right: 8),
             child: Row(
