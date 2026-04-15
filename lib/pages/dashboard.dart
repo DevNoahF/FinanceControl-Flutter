@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:finance_control/core/auth/auth_service.dart';
+import 'package:go_router/go_router.dart';
 import '../models/transacao.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -131,6 +133,11 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: const Color(0xFFE0E0E0),
         elevation: 0,
         actions: [
+          IconButton(
+            onPressed: authService.logout,
+            icon: const Icon(Icons.logout, color: Colors.black87),
+            tooltip: 'Sair',
+          ),
           const Padding(
             padding: EdgeInsets.only(right: 8),
             child: Row(
@@ -170,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: const Icon(Icons.dashboard),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/dashboard');
+                context.go('/home');
               },
             ),
             ListTile(
@@ -178,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: const Icon(Icons.person_add),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/transacao');
+                context.go('/cadastro');
               },
             ),
           ],
@@ -275,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ListView.separated(
                         itemCount: transacoesTeste.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (context, index) => const Divider(height: 1),
                         itemBuilder: (ctx, i) {
                           final t = transacoesTeste[i];
                           return Padding(

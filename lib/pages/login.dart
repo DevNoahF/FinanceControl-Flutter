@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:finance_control/core/auth/auth_service.dart';
+import 'package:go_router/go_router.dart';
 
 class Login extends StatelessWidget {
   const Login({super.key});
@@ -145,7 +147,7 @@ class Login extends StatelessWidget {
                                 SizedBox(
                                   height: 38,
                                   child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: authService.login,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: const Color(0xFF3A3A3A),
@@ -174,6 +176,14 @@ class Login extends StatelessWidget {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,
                                   ),
+                                ),
+                                const SizedBox(height: 10),
+                                TextButton(
+                                  onPressed: () => context.go('/cadastro'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('Ir para cadastro'),
                                 ),
                               ],
                             ),
