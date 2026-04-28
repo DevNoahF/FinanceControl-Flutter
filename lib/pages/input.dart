@@ -1,9 +1,61 @@
 import 'package:flutter/material.dart';
-import 'package:finance_control/core/auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
 
-class InputScreen extends StatelessWidget {
+class InputScreen extends StatefulWidget {
   const InputScreen({super.key});
+
+  @override
+  State<InputScreen> createState() => _InputScreenState();
+}
+
+class _InputScreenState extends State<InputScreen> {
+  String tipo = 'entrada';
+
+  final TextEditingController valorCtrl = TextEditingController();
+  final TextEditingController descricaoCtrl = TextEditingController();
+
+  Color get corTipo {
+    switch (tipo) {
+      case 'entrada':
+        return Colors.green;
+      case 'saida':
+        return Colors.red;
+      case 'transferencia':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _limparCampos() {
+    valorCtrl.clear();
+    descricaoCtrl.clear();
+    setState(() {
+      tipo = 'entrada';
+    });
+  }
+
+  void _salvar() {
+    final valor = double.tryParse(valorCtrl.text);
+
+    if (valor == null || descricaoCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos corretamente')),
+      );
+      return;
+    }
+
+    // Aqui você pode integrar com sua lista / backend
+    print('Tipo: $tipo');
+    print('Valor: $valor');
+    print('Descrição: ${descricaoCtrl.text}');
+
+    _limparCampos();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Transação salva com sucesso!')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +92,6 @@ class InputScreen extends StatelessWidget {
                         Color(0xFFBFD0C5),
                         Color(0xFFAEBFB4),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
                   ),
                   child: Padding(
@@ -51,35 +101,9 @@ class InputScreen extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(
-                                Icons.account_balance_wallet_rounded,
-                                color: Color(0xFF2F5D50),
-                                size: 30,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            const Text(
-                              'Finance Control',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF20322D),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        const Text(
+                      children: const [
+                        Spacer(),
+                        Text(
                           'Controle suas finanças\ncom clareza e elegância.',
                           style: TextStyle(
                             fontSize: 34,
@@ -88,46 +112,16 @@ class InputScreen extends StatelessWidget {
                             color: Color(0xFF20322D),
                           ),
                         ),
-                        const SizedBox(height: 18),
-                        const Text(
-                          'Registre entradas, despesas e transferências em uma tela simples, limpa e pronta para desktop.',
+                        SizedBox(height: 18),
+                        Text(
+                          'Registre entradas e despesas de forma simples.',
                           style: TextStyle(
                             fontSize: 17,
                             height: 1.5,
                             color: Color(0xFF32453F),
                           ),
                         ),
-                        const SizedBox(height: 28),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.55),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.trending_up_rounded,
-                                color: Color(0xFF2F5D50),
-                              ),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Organização hoje, paz amanhã. Milagre não, método.',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: Color(0xFF20322D),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Spacer(),
+                        Spacer(),
                       ],
                     ),
                   ),
@@ -144,56 +138,75 @@ class InputScreen extends StatelessWidget {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Novo lançamento',
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF111827),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Preencha os campos abaixo para registrar uma movimentação.',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Novo lançamento',
+                                    style: TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () => context.go('/home'),
+                                    icon: const Icon(Icons.arrow_back),
+                                    label: const Text('Voltar'),
+                                  ),
+                                ],
+                              ),
                       const SizedBox(height: 35),
 
-                      const _CustomLabel('Transferências'),
+                      // TIPO
+                      const _CustomLabel('Tipo de transação'),
                       const SizedBox(height: 10),
-                      const _CustomInput(
-                        hintText: 'Digite o valor da transferência',
-                        icon: Icons.swap_horiz_rounded,
+
+                      Row(
+                        children: [
+                          _TipoChip(
+                            label: 'Entrada',
+                            selected: tipo == 'entrada',
+                            onTap: () =>
+                                setState(() => tipo = 'entrada'),
+                          ),
+                          const SizedBox(width: 10),
+                          _TipoChip(
+                            label: 'Saída',
+                            selected: tipo == 'saida',
+                            onTap: () =>
+                                setState(() => tipo = 'saida'),
+                          ),
+                          const SizedBox(width: 10),
+                          _TipoChip(
+                            label: 'Transferência',
+                            selected: tipo == 'transferencia',
+                            onTap: () =>
+                                setState(() => tipo = 'transferencia'),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 22),
 
-                      const _CustomLabel('Despesas'),
+                      // VALOR
+                      const _CustomLabel('Valor'),
                       const SizedBox(height: 10),
-                      const _CustomInput(
-                        hintText: 'Digite o valor da despesa',
-                        icon: Icons.arrow_downward_rounded,
+                      _CustomInput(
+                        controller: valorCtrl,
+                        hintText: 'Digite o valor',
+                        icon: Icons.attach_money,
                       ),
 
                       const SizedBox(height: 22),
 
-                      const _CustomLabel('Entrada'),
-                      const SizedBox(height: 10),
-                      const _CustomInput(
-                        hintText: 'Digite o valor da entrada',
-                        icon: Icons.arrow_upward_rounded,
-                      ),
-
-                      const SizedBox(height: 22),
-
+                      // DESCRIÇÃO
                       const _CustomLabel('Descrição'),
                       const SizedBox(height: 10),
-                      const _CustomInput(
-                        hintText: 'Ex: salário, mercado, pagamento...',
+                      _CustomInput(
+                        controller: descricaoCtrl,
+                        hintText:
+                            'Ex: salário, mercado, aluguel...',
                         icon: Icons.edit_note_rounded,
                       ),
 
@@ -205,23 +218,8 @@ class InputScreen extends StatelessWidget {
                             child: SizedBox(
                               height: 56,
                               child: OutlinedButton(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: Color(0xFFCAD5E2),
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Limpar',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Color(0xFF374151),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                onPressed: _limparCampos,
+                                child: const Text('Limpar'),
                               ),
                             ),
                           ),
@@ -230,22 +228,9 @@ class InputScreen extends StatelessWidget {
                             child: SizedBox(
                               height: 56,
                               child: ElevatedButton(
-                                onPressed: () {},
-                                style: ElevatedButton.styleFrom(
-                                  elevation: 0,
-                                  backgroundColor: const Color(0xFF111827),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Salvar lançamento',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                onPressed: _salvar,
+                                child:
+                                    const Text('Salvar lançamento'),
                               ),
                             ),
                           ),
@@ -275,7 +260,6 @@ class _CustomLabel extends StatelessWidget {
       style: const TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        color: Color(0xFF1F2937),
       ),
     );
   }
@@ -284,45 +268,57 @@ class _CustomLabel extends StatelessWidget {
 class _CustomInput extends StatelessWidget {
   final String hintText;
   final IconData icon;
+  final TextEditingController controller;
 
   const _CustomInput({
     required this.hintText,
     required this.icon,
+    required this.controller,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
-      style: const TextStyle(
-        fontSize: 15,
-        color: Color(0xFF111827),
-      ),
+      controller: controller,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(
-          color: Color(0xFF9CA3AF),
-        ),
-        prefixIcon: Icon(
-          icon,
-          color: const Color(0xFF6B7280),
-        ),
-        filled: true,
-        fillColor: const Color(0xFFF9FAFB),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 20,
-        ),
-        enabledBorder: OutlineInputBorder(
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
-            color: Color(0xFFE5E7EB),
-          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
-            color: Color(0xFF2F5D50),
-            width: 1.6,
+      ),
+    );
+  }
+}
+
+class _TipoChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TipoChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          color:
+              selected ? const Color(0xFF111827) : Colors.grey[200],
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.black,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
