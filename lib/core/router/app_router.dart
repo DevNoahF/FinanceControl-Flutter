@@ -2,6 +2,7 @@ import 'package:finance_control/core/auth/auth_service.dart';
 import 'package:finance_control/pages/cadastro.dart';
 import 'package:finance_control/pages/dashboard.dart';
 import 'package:finance_control/pages/login.dart';
+import 'package:finance_control/pages/input.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouter = GoRouter(
@@ -36,5 +37,10 @@ final appRouter = GoRouter(
       path: '/home',
       builder: (context, state) => const HomeScreen(),
     ),
+    GoRoute(
+      path: '/input',
+      builder: (context, state) => const InputScreen(),
+      ),
+    
   ],
 );

@@ -185,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: const Icon(Icons.person_add),
               onTap: () {
                 Navigator.pop(context);
-                context.go('/cadastro');
+                context.go('/input');
               },
             ),
           ],
