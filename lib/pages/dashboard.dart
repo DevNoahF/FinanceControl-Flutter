@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:finance_control/core/auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import '../models/transacao.dart';
+import '../components/menuDropdown.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
     Transacao(
       titulo: 'Freelance',
-      descricao: 'Projeto web',
+      descricao: 'Projeto web replica do ifood',
       valor: 2500,
       isEntrada: true,
     ),
@@ -32,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
     Transacao(
       titulo: 'Conta de luz',
-      descricao: 'Fatura de maio',
+      descricao: 'Fatura de maio, cara por deixar ia rodando no servidor',
       valor: 700,
       isEntrada: false,
     ),
@@ -133,27 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: const Color(0xFFE0E0E0),
         elevation: 0,
         actions: [
-          IconButton(
-            onPressed: authService.logout,
-            icon: const Icon(Icons.logout, color: Colors.black87),
-            tooltip: 'Sair',
-          ),
-          const Padding(
-            padding: EdgeInsets.only(right: 8),
-            child: Row(
-              children: [
-                Text(
-                  'Olá, Maria',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
-                Icon(Icons.keyboard_arrow_down, color: Colors.black),
-                SizedBox(width: 8),
-              ],
-            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(child: MenuDropdown(nomeUsuario: 'Maria')),
           ),
         ],
       ),
@@ -282,7 +265,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ListView.separated(
                         itemCount: transacoesTeste.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
                         itemBuilder: (ctx, i) {
                           final t = transacoesTeste[i];
                           return Padding(
