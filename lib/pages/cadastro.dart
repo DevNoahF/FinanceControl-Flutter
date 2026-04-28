@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:finance_control/core/auth/auth_service.dart';
+import 'package:go_router/go_router.dart';
 
 class Cadastro extends StatelessWidget {
   const Cadastro({super.key});
@@ -182,14 +184,12 @@ class Cadastro extends StatelessWidget {
                                   height: 1,
                                 ),
                                 const SizedBox(height: 10),
-                                const Text(
-                                  'Ou faça login',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
+                                TextButton(
+                                  onPressed: () => context.go('/login'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.white,
                                   ),
+                                  child: const Text('Ou faça Login'),
                                 ),
                               ],
                             ),

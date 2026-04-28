@@ -17,7 +17,6 @@ void main() {
 
   test('toJson retorna JSON correto', () {
     const admin = Admin(
-      id: 2,
       email: "admin@email.com",
       senha: "123",
     );
@@ -31,7 +30,6 @@ void main() {
 
   test('copyWith altera apenas campos informados', () {
     const admin = Admin(
-      id: 1,
       email: "admin@email.com",
       senha: "123",
     );
