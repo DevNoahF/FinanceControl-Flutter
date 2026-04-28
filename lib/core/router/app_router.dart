@@ -6,7 +6,7 @@ import 'package:finance_control/pages/input.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/home',
+  initialLocation: '/home',  // cadatro
   refreshListenable: authService,
   redirect: (context, state) {
     final isAuthenticated = authService.isAuthenticated;

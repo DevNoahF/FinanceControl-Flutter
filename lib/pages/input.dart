@@ -20,10 +20,10 @@ class _InputScreenState extends State<InputScreen> {
         return Colors.green;
       case 'saida':
         return Colors.red;
-      case 'transferencia':
-        return Colors.blue;
-      default:
-        return Colors.grey;
+        case 'transferencia':
+          return Colors.blue;
+        default:
+          return Colors.grey;
     }
   }
 
