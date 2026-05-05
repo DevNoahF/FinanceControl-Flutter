@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:finance_control/core/auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
+import '../components/customTextField.dart'; 
 
-class Login extends StatelessWidget {
+class Login extends StatefulWidget {
   const Login({super.key});
+
+  @override
+  State<Login> createState() => _LoginState();
+}
+
+class _LoginState extends State<Login> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _senhaController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _senhaController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,30 +116,24 @@ class Login extends StatelessWidget {
                                 const SizedBox(height: 22),
                                 const Text(
                                   'E-mail',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                                  style: TextStyle(color: Colors.white, fontSize: 15),
                                 ),
                                 const SizedBox(height: 10),
-                                const _LoginField(
+                                CustomTextField(
+                                  controller: _emailController,
                                   hintText: 'Digite seu e-mail',
                                   keyboardType: TextInputType.emailAddress,
                                 ),
                                 const SizedBox(height: 18),
                                 const Text(
                                   'Senha',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                                  style: TextStyle(color: Colors.white, fontSize: 15),
                                 ),
-                                const SizedBox(height: 6),
-                                const _LoginField(
+                                const SizedBox(height: 10),
+                                CustomTextField(
+                                  controller: _senhaController,
                                   hintText: 'Digite sua senha',
-                                  obscureText: true,
+                                  isPassword: true,
                                 ),
                                 const SizedBox(height: 6),
                                 Align(
@@ -134,8 +144,7 @@ class Login extends StatelessWidget {
                                       foregroundColor: Colors.white70,
                                       padding: EdgeInsets.zero,
                                       minimumSize: Size.zero,
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     ),
                                     child: const Text(
                                       'Esqueceu a senha?',
@@ -147,35 +156,29 @@ class Login extends StatelessWidget {
                                 SizedBox(
                                   height: 38,
                                   child: ElevatedButton(
-                                    onPressed: authService.login,
+                                    onPressed: () {
+                                      authService.login(
+                                        context,
+                                        _emailController.text,
+                                        _senhaController.text,
+                                      );
+                                    },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: const Color(0xFF3A3A3A),
                                       elevation: 0,
                                       shape: const StadiumBorder(),
-                                      textStyle: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w400,
-                                      ),
                                     ),
                                     child: const Text('Entrar'),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                const Divider(
-                                  color: Colors.white54,
-                                  thickness: 1,
-                                  height: 1,
-                                ),
+                                const Divider(color: Colors.white54, thickness: 1),
                                 const SizedBox(height: 10),
                                 const Text(
                                   'Ou cadastra-se',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                                  style: TextStyle(color: Colors.white, fontSize: 14),
                                 ),
                                 const SizedBox(height: 10),
                                 TextButton(
@@ -194,53 +197,6 @@ class Login extends StatelessWidget {
                   );
                 },
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LoginField extends StatelessWidget {
-  const _LoginField({
-    required this.hintText,
-    this.keyboardType,
-    this.obscureText = false,
-  });
-
-  final String hintText;
-  final TextInputType? keyboardType;
-  final bool obscureText;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: TextField(
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Color(0xFFB9B9B9),
-            fontSize: 13,
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 12,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
-            borderSide: const BorderSide(
-              color: Color(0xFFB9C9D8),
-              width: 1,
             ),
           ),
         ),
