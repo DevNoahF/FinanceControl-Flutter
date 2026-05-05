@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/transacoes_data.dart';
 import '../models/transacao.dart';
+import '../data/transacoes_data.dart';
 
 class InputScreen extends StatefulWidget {
   const InputScreen({super.key});
@@ -29,7 +29,9 @@ class _InputScreenState extends State<InputScreen> {
   }
 
   void _salvar() {
-    final valor = double.tryParse(valorCtrl.text.replaceAll(',', '.'));
+    final valor = double.tryParse(
+      valorCtrl.text.replaceAll(',', '.'),
+    );
 
     if (tituloCtrl.text.isEmpty ||
         valor == null ||
@@ -55,7 +57,7 @@ class _InputScreenState extends State<InputScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Transação salva com sucesso!'),
+        content: Text('Transação adicionada com sucesso!'),
       ),
     );
 
@@ -83,6 +85,7 @@ class _InputScreenState extends State<InputScreen> {
           ),
           child: Row(
             children: [
+              // LADO ESQUERDO
               Expanded(
                 flex: 4,
                 child: Container(
@@ -132,6 +135,7 @@ class _InputScreenState extends State<InputScreen> {
                 ),
               ),
 
+              // LADO DIREITO
               Expanded(
                 flex: 5,
                 child: Padding(
@@ -143,7 +147,8 @@ class _InputScreenState extends State<InputScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Novo lançamento',
@@ -162,6 +167,7 @@ class _InputScreenState extends State<InputScreen> {
 
                       const SizedBox(height: 35),
 
+                      // TIPO
                       const _CustomLabel('Tipo de transação'),
                       const SizedBox(height: 10),
 
@@ -170,31 +176,46 @@ class _InputScreenState extends State<InputScreen> {
                           _TipoChip(
                             label: 'Entrada',
                             selected: tipo == 'entrada',
-                            onTap: () => setState(() => tipo = 'entrada'),
+                            onTap: () {
+                              setState(() {
+                                tipo = 'entrada';
+                              });
+                            },
                           ),
+
                           const SizedBox(width: 10),
+
                           _TipoChip(
                             label: 'Saída',
                             selected: tipo == 'saida',
-                            onTap: () => setState(() => tipo = 'saida'),
+                            onTap: () {
+                              setState(() {
+                                tipo = 'saida';
+                              });
+                            },
                           ),
                         ],
                       ),
 
                       const SizedBox(height: 22),
 
+                      // TÍTULO
                       const _CustomLabel('Título'),
                       const SizedBox(height: 10),
+
                       _CustomInput(
                         controller: tituloCtrl,
-                        hintText: 'Ex: Salário, Mercado, Aluguel...',
+                        hintText:
+                            'Ex: Salário, Mercado, Aluguel...',
                         icon: Icons.title_rounded,
                       ),
 
                       const SizedBox(height: 22),
 
+                      // VALOR
                       const _CustomLabel('Valor'),
                       const SizedBox(height: 10),
+
                       _CustomInput(
                         controller: valorCtrl,
                         hintText: 'Digite o valor',
@@ -203,11 +224,14 @@ class _InputScreenState extends State<InputScreen> {
 
                       const SizedBox(height: 22),
 
+                      // DESCRIÇÃO
                       const _CustomLabel('Descrição'),
                       const SizedBox(height: 10),
+
                       _CustomInput(
                         controller: descricaoCtrl,
-                        hintText: 'Ex: salário, mercado, aluguel...',
+                        hintText:
+                            'Ex: salário mensal, compra no mercado...',
                         icon: Icons.edit_note_rounded,
                       ),
 
@@ -224,13 +248,17 @@ class _InputScreenState extends State<InputScreen> {
                               ),
                             ),
                           ),
+
                           const SizedBox(width: 16),
+
                           Expanded(
                             child: SizedBox(
                               height: 56,
                               child: ElevatedButton(
                                 onPressed: _salvar,
-                                child: const Text('Salvar lançamento'),
+                                child: const Text(
+                                  'Salvar lançamento',
+                                ),
                               ),
                             ),
                           ),
@@ -312,7 +340,9 @@ class _TipoChip extends StatelessWidget {
           vertical: 12,
         ),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF111827) : Colors.grey[200],
+          color: selected
+              ? const Color(0xFF111827)
+              : Colors.grey[200],
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(

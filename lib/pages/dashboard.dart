@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:finance_control/core/auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
+
 import '../models/transacao.dart';
 import '../components/menuDropdown.dart';
 import '../data/transacoes_data.dart';
@@ -13,49 +13,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<Transacao> transacoesTeste = [
-    Transacao(
-      titulo: 'Salário',
-      descricao: 'Pagamento mensal',
-      valor: 3000,
-      isEntrada: true,
-    ),
-    Transacao(
-      titulo: 'Freelance',
-      descricao: 'Projeto web replica do ifood',
-      valor: 2500,
-      isEntrada: true,
-    ),
-    Transacao(
-      titulo: 'Consultoria',
-      descricao: 'Reunião cliente',
-      valor: 3100,
-      isEntrada: true,
-    ),
-    Transacao(
-      titulo: 'Conta de luz',
-      descricao: 'Fatura de maio, cara por deixar ia rodando no servidor',
-      valor: 700,
-      isEntrada: false,
-    ),
-  ];
-
-  double get totalEntradas => transacoesTeste
+  double get totalEntradas => transacoes
       .where((t) => t.isEntrada)
       .fold(0, (sum, t) => sum + t.valor);
 
-  double get totalSaidas => transacoesTeste
+  double get totalSaidas => transacoes
       .where((t) => !t.isEntrada)
       .fold(0, (sum, t) => sum + t.valor);
 
   double get restante => totalEntradas - totalSaidas;
 
   void _excluirTransacao(int index) {
-    setState(() => transacoesTeste.removeAt(index));
+    setState(() {
+      transacoes.removeAt(index);
+    });
   }
 
   void _editarTransacao(int index) {
-    final transacao = transacoesTeste[index];
+    final transacao = transacoes[index];
+
     final tituloCtrl = TextEditingController(text: transacao.titulo);
     final descricaoCtrl = TextEditingController(text: transacao.descricao);
     final valorCtrl = TextEditingController(text: transacao.valor.toString());
@@ -95,7 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     Switch(
                       value: isEntrada,
                       onChanged: (value) {
-                        setDialogState(() => isEntrada = value);
+                        setDialogState(() {
+                          isEntrada = value;
+                        });
                       },
                     ),
                   ],
@@ -112,13 +90,15 @@ class _HomeScreenState extends State<HomeScreen> {
           TextButton(
             onPressed: () {
               setState(() {
-                transacoesTeste[index] = Transacao(
+                transacoes[index] = transacao.copyWith(
                   titulo: tituloCtrl.text,
                   descricao: descricaoCtrl.text,
-                  valor: double.tryParse(valorCtrl.text) ?? transacao.valor,
+                  valor: double.tryParse(valorCtrl.text.replaceAll(',', '.')) ??
+                      transacao.valor,
                   isEntrada: isEntrada,
                 );
               });
+
               Navigator.pop(ctx);
             },
             child: const Text('Salvar'),
@@ -137,7 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Center(child: MenuDropdown(nomeUsuario: 'Maria')),
+            child: Center(
+              child: MenuDropdown(nomeUsuario: 'Maria'),
+            ),
           ),
         ],
       ),
@@ -146,7 +128,9 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color: Color.fromARGB(255, 3, 148, 24)),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 3, 148, 24),
+              ),
               child: Text(
                 'Finanças',
                 style: TextStyle(
@@ -179,7 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Cards de resumo
             Row(
               children: [
                 _CardResumo(
@@ -202,7 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 40),
-            // Tabela de transações
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -211,7 +193,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Cabeçalho
                     const Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 16,
@@ -262,90 +243,105 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const Divider(height: 1),
-                    // Lista
                     Expanded(
-                      child: ListView.separated(
-                        itemCount: transacoesTeste.length,
-                        separatorBuilder: (context, index) =>
-                            const Divider(height: 1),
-                        itemBuilder: (ctx, i) {
-                          final t = transacoesTeste[i];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 70,
-                                  child: Center(
-                                    child: Icon(
-                                      t.isEntrada
-                                          ? Icons.add_circle
-                                          : Icons.remove_circle,
-                                      color: t.isEntrada
-                                          ? Colors.green
-                                          : Colors.red,
-                                    ),
-                                  ),
+                      child: transacoes.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'Nenhuma transação cadastrada ainda.',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
                                 ),
-                                Expanded(
-                                  child: Text(
-                                    t.titulo,
-                                    style: const TextStyle(fontSize: 13),
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: transacoes.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (ctx, i) {
+                                final t = transacoes[i];
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 10,
                                   ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    t.descricao,
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 70,
-                                  child: Text(
-                                    'R\$ ${t.valor.toStringAsFixed(0)}',
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ),
-                                // Botões editar/excluir
-                                SizedBox(
-                                  width: 60,
                                   child: Row(
                                     children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          color: Colors.orange,
-                                          size: 20,
-                                        ),
-                                        onPressed: () => _editarTransacao(i),
-                                        constraints: const BoxConstraints(),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 4,
+                                      SizedBox(
+                                        width: 70,
+                                        child: Center(
+                                          child: Icon(
+                                            t.isEntrada
+                                                ? Icons.add_circle
+                                                : Icons.remove_circle,
+                                            color: t.isEntrada
+                                                ? Colors.green
+                                                : Colors.red,
+                                          ),
                                         ),
                                       ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.cancel,
-                                          color: Colors.red,
-                                          size: 20,
+                                      Expanded(
+                                        child: Text(
+                                          t.titulo,
+                                          style: const TextStyle(fontSize: 13),
                                         ),
-                                        onPressed: () => _excluirTransacao(i),
-                                        constraints: const BoxConstraints(),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 4,
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          t.descricao,
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 70,
+                                        child: Text(
+                                          'R\$ ${t.valor.toStringAsFixed(2)}',
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 60,
+                                        child: Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.edit,
+                                                color: Colors.orange,
+                                                size: 20,
+                                              ),
+                                              onPressed: () =>
+                                                  _editarTransacao(i),
+                                              constraints:
+                                                  const BoxConstraints(),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 4,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.cancel,
+                                                color: Colors.red,
+                                                size: 20,
+                                              ),
+                                              onPressed: () =>
+                                                  _excluirTransacao(i),
+                                              constraints:
+                                                  const BoxConstraints(),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 4,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ),
                   ],
                 ),
