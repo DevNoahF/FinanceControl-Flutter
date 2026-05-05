@@ -3,6 +3,7 @@ import 'package:finance_control/core/auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import '../models/transacao.dart';
 import '../components/menuDropdown.dart';
+import '../data/transacoes_data.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

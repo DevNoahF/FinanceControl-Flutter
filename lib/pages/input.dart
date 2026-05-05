@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/transacoes_data.dart';
+import '../models/transacao.dart';
+
 class InputScreen extends StatefulWidget {
   const InputScreen({super.key});
 
@@ -11,50 +14,52 @@ class InputScreen extends StatefulWidget {
 class _InputScreenState extends State<InputScreen> {
   String tipo = 'entrada';
 
+  final TextEditingController tituloCtrl = TextEditingController();
   final TextEditingController valorCtrl = TextEditingController();
   final TextEditingController descricaoCtrl = TextEditingController();
 
-  Color get corTipo {
-    switch (tipo) {
-      case 'entrada':
-        return Colors.green;
-      case 'saida':
-        return Colors.red;
-        case 'transferencia':
-          return Colors.blue;
-        default:
-          return Colors.grey;
-    }
-  }
-
   void _limparCampos() {
+    tituloCtrl.clear();
     valorCtrl.clear();
     descricaoCtrl.clear();
+
     setState(() {
       tipo = 'entrada';
     });
   }
 
   void _salvar() {
-    final valor = double.tryParse(valorCtrl.text);
+    final valor = double.tryParse(valorCtrl.text.replaceAll(',', '.'));
 
-    if (valor == null || descricaoCtrl.text.isEmpty) {
+    if (tituloCtrl.text.isEmpty ||
+        valor == null ||
+        descricaoCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos corretamente')),
+        const SnackBar(
+          content: Text('Preencha todos os campos corretamente'),
+        ),
       );
       return;
     }
 
-    // Aqui você pode integrar com sua lista / backend
-    print('Tipo: $tipo');
-    print('Valor: $valor');
-    print('Descrição: ${descricaoCtrl.text}');
+    transacoes.add(
+      Transacao(
+        titulo: tituloCtrl.text,
+        descricao: descricaoCtrl.text,
+        valor: valor,
+        isEntrada: tipo == 'entrada',
+      ),
+    );
 
     _limparCampos();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Transação salva com sucesso!')),
+      const SnackBar(
+        content: Text('Transação salva com sucesso!'),
+      ),
     );
+
+    context.go('/home');
   }
 
   @override
@@ -78,7 +83,6 @@ class _InputScreenState extends State<InputScreen> {
           ),
           child: Row(
             children: [
-              // LADO ESQUERDO
               Expanded(
                 flex: 4,
                 child: Container(
@@ -94,14 +98,14 @@ class _InputScreenState extends State<InputScreen> {
                       ],
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(
                       horizontal: 40,
                       vertical: 50,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Spacer(),
                         Text(
                           'Controle suas finanças\ncom clareza e elegância.',
@@ -128,7 +132,6 @@ class _InputScreenState extends State<InputScreen> {
                 ),
               ),
 
-              // LADO DIREITO
               Expanded(
                 flex: 5,
                 child: Padding(
@@ -138,27 +141,27 @@ class _InputScreenState extends State<InputScreen> {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Novo lançamento',
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  TextButton.icon(
-                                    onPressed: () => context.go('/home'),
-                                    icon: const Icon(Icons.arrow_back),
-                                    label: const Text('Voltar'),
-                                  ),
-                                ],
-                              ),
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Novo lançamento',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: () => context.go('/home'),
+                            icon: const Icon(Icons.arrow_back),
+                            label: const Text('Voltar'),
+                          ),
+                        ],
+                      ),
+
                       const SizedBox(height: 35),
 
-                      // TIPO
                       const _CustomLabel('Tipo de transação'),
                       const SizedBox(height: 10),
 
@@ -167,29 +170,29 @@ class _InputScreenState extends State<InputScreen> {
                           _TipoChip(
                             label: 'Entrada',
                             selected: tipo == 'entrada',
-                            onTap: () =>
-                                setState(() => tipo = 'entrada'),
+                            onTap: () => setState(() => tipo = 'entrada'),
                           ),
                           const SizedBox(width: 10),
                           _TipoChip(
                             label: 'Saída',
                             selected: tipo == 'saida',
-                            onTap: () =>
-                                setState(() => tipo = 'saida'),
-                          ),
-                          const SizedBox(width: 10),
-                          _TipoChip(
-                            label: 'Transferência',
-                            selected: tipo == 'transferencia',
-                            onTap: () =>
-                                setState(() => tipo = 'transferencia'),
+                            onTap: () => setState(() => tipo = 'saida'),
                           ),
                         ],
                       ),
 
                       const SizedBox(height: 22),
 
-                      // VALOR
+                      const _CustomLabel('Título'),
+                      const SizedBox(height: 10),
+                      _CustomInput(
+                        controller: tituloCtrl,
+                        hintText: 'Ex: Salário, Mercado, Aluguel...',
+                        icon: Icons.title_rounded,
+                      ),
+
+                      const SizedBox(height: 22),
+
                       const _CustomLabel('Valor'),
                       const SizedBox(height: 10),
                       _CustomInput(
@@ -200,13 +203,11 @@ class _InputScreenState extends State<InputScreen> {
 
                       const SizedBox(height: 22),
 
-                      // DESCRIÇÃO
                       const _CustomLabel('Descrição'),
                       const SizedBox(height: 10),
                       _CustomInput(
                         controller: descricaoCtrl,
-                        hintText:
-                            'Ex: salário, mercado, aluguel...',
+                        hintText: 'Ex: salário, mercado, aluguel...',
                         icon: Icons.edit_note_rounded,
                       ),
 
@@ -229,13 +230,12 @@ class _InputScreenState extends State<InputScreen> {
                               height: 56,
                               child: ElevatedButton(
                                 onPressed: _salvar,
-                                child:
-                                    const Text('Salvar lançamento'),
+                                child: const Text('Salvar lançamento'),
                               ),
                             ),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -307,11 +307,12 @@ class _TipoChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 12,
+        ),
         decoration: BoxDecoration(
-          color:
-              selected ? const Color(0xFF111827) : Colors.grey[200],
+          color: selected ? const Color(0xFF111827) : Colors.grey[200],
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(
