@@ -8,6 +8,7 @@ class MenuDropdown extends StatelessWidget {
   const MenuDropdown({Key? key, required this.nomeUsuario}) : super(key: key);
 
   @override
+
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       offset: const Offset(0, 40),
@@ -16,7 +17,7 @@ class MenuDropdown extends StatelessWidget {
           authService.logout();
           context.go('/login'); 
         } else if (value == 'atualizar') {
-          context.go('/perfil');
+          context.go('/emConstrucao');
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[

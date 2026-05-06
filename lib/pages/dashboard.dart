@@ -55,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _editarTransacao(int index) {
     final transacao = transacoesTeste[index];
+    final formKey = GlobalKey<FormState>();
     final tituloCtrl = TextEditingController(text: transacao.titulo);
     final descricaoCtrl = TextEditingController(text: transacao.descricao);
     final valorCtrl = TextEditingController(text: transacao.valor.toString());
@@ -66,40 +67,66 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Editar Transação'),
         content: StatefulBuilder(
           builder: (ctx, setDialogState) => SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: tituloCtrl,
-                  decoration: const InputDecoration(labelText: 'Título'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descricaoCtrl,
-                  decoration: const InputDecoration(labelText: 'Descrição'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: valorCtrl,
-                  decoration: const InputDecoration(labelText: 'Valor'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: tituloCtrl,
+                    decoration: const InputDecoration(labelText: 'Título'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Informe o título da transação';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Entrada:'),
-                    Switch(
-                      value: isEntrada,
-                      onChanged: (value) {
-                        setDialogState(() => isEntrada = value);
-                      },
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: descricaoCtrl,
+                    decoration: const InputDecoration(labelText: 'Descrição'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Informe a descrição';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: valorCtrl,
+                    decoration: const InputDecoration(labelText: 'Valor'),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
-                  ],
-                ),
-              ],
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Informe um valor';
+                      }
+                      final parsedValue =
+                          double.tryParse(value.replaceAll(',', '.'));
+                      if (parsedValue == null || parsedValue <= 0) {
+                        return 'Informe um valor numérico válido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Entrada:'),
+                      Switch(
+                        value: isEntrada,
+                        onChanged: (value) {
+                          setDialogState(() => isEntrada = value);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -110,15 +137,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () {
-              setState(() {
-                transacoesTeste[index] = Transacao(
-                  titulo: tituloCtrl.text,
-                  descricao: descricaoCtrl.text,
-                  valor: double.tryParse(valorCtrl.text) ?? transacao.valor,
-                  isEntrada: isEntrada,
-                );
-              });
-              Navigator.pop(ctx);
+              if (formKey.currentState?.validate() ?? false) {
+                setState(() {
+                  transacoesTeste[index] = Transacao(
+                    titulo: tituloCtrl.text,
+                    descricao: descricaoCtrl.text,
+                    valor: double.tryParse(valorCtrl.text.replaceAll(',', '.')) ??
+                        transacao.valor,
+                    isEntrada: isEntrada,
+                  );
+                });
+                Navigator.pop(ctx);
+              }
             },
             child: const Text('Salvar'),
           ),
