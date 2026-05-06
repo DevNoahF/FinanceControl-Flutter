@@ -5,8 +5,15 @@ class AuthService extends ChangeNotifier {
 
   bool get isAuthenticated => _isAuthenticated;
 
-  void login() {
-    _updateAuth(true);
+  void login(BuildContext context, String email, String password) {
+    if (email == "admin@teste.com" && password == "123") {
+      _updateAuth(true);
+    } else {
+      // Alerta de erro simples
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Usuário ou senha incorretos")),
+      );
+    }
   }
 
   void logout() {
