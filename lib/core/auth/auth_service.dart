@@ -4,6 +4,8 @@ import 'package:finance_control/models/usuario.dart';
 class AuthService extends ChangeNotifier {
   bool _isAuthenticated = false;
 
+  Usuario? _usuarioLogado;
+
   final List<Usuario> _usuarios = [
     Usuario(
       id: 1,
@@ -18,6 +20,8 @@ class AuthService extends ChangeNotifier {
 
   bool get isAuthenticated => _isAuthenticated;
 
+  Usuario? get usuarioLogado => _usuarioLogado;
+
   List<Usuario> get usuarios => _usuarios;
 
   void cadastrar(Usuario usuario) {
@@ -26,15 +30,17 @@ class AuthService extends ChangeNotifier {
   }
 
   void login(BuildContext context, String email, String password) {
-    final usuarioExiste = _usuarios.any(
-      (usuario) =>
-          usuario.email == email.trim() &&
-          usuario.senha == password.trim(),
-    );
+    try {
+      final usuario = _usuarios.firstWhere(
+        (u) =>
+            u.email == email.trim() &&
+            u.senha == password.trim(),
+      );
 
-    if (usuarioExiste) {
+      _usuarioLogado = usuario; // 🔥 guarda o usuário logado
       _updateAuth(true);
-    } else {
+
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Usuário ou senha incorretos"),
@@ -44,6 +50,7 @@ class AuthService extends ChangeNotifier {
   }
 
   void logout() {
+    _usuarioLogado = null; // 🔥 limpa usuário
     _updateAuth(false);
   }
 
