@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../models/transacao.dart';
 import '../components/menuDropdown.dart';
 import '../data/transacoes_data.dart';
+import '../core/auth/auth_service.dart'; // 👈 IMPORTANTE
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -135,6 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final nomeUsuario = authService.usuarioLogado?.nome ?? 'Usuário'; // 🔥
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0E0E0),
@@ -143,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
-              child: MenuDropdown(nomeUsuario: 'Maria'),
+              child: MenuDropdown(nomeUsuario: nomeUsuario), // 🔥 aqui
             ),
           ),
         ],

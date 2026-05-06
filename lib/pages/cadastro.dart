@@ -1,9 +1,165 @@
 import 'package:flutter/material.dart';
-import 'package:finance_control/core/auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
 
-class Cadastro extends StatelessWidget {
+import 'package:finance_control/core/auth/auth_service.dart';
+import 'package:finance_control/models/usuario.dart';
+
+class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
+
+  @override
+  State<Cadastro> createState() => _CadastroState();
+}
+
+class _CadastroState extends State<Cadastro> {
+  final _formKey = GlobalKey<FormState>();
+
+  final nomeController = TextEditingController();
+  final sobrenomeController = TextEditingController();
+  final profissaoController = TextEditingController();
+  final dataNascimentoController = TextEditingController();
+  final emailController = TextEditingController();
+  final senhaController = TextEditingController();
+
+  bool _mostrarSenha = false;
+
+  @override
+  void dispose() {
+    nomeController.dispose();
+    sobrenomeController.dispose();
+    profissaoController.dispose();
+    dataNascimentoController.dispose();
+    emailController.dispose();
+    senhaController.dispose();
+    super.dispose();
+  }
+
+  int _calcularIdade(DateTime nascimento) {
+    final hoje = DateTime.now();
+    int idade = hoje.year - nascimento.year;
+
+    if (hoje.month < nascimento.month ||
+        hoje.month == nascimento.month && hoje.day < nascimento.day) {
+      idade--;
+    }
+
+    return idade;
+  }
+
+  DateTime? _converterDataNascimento(String value) {
+    try {
+      final partes = value.split('/');
+
+      final dia = int.parse(partes[0]);
+      final mes = int.parse(partes[1]);
+      final ano = int.parse(partes[2]);
+
+      return DateTime(ano, mes, dia);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _cadastrar() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final nascimento = _converterDataNascimento(
+      dataNascimentoController.text.trim(),
+    );
+
+    if (nascimento == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Data de nascimento inválida'),
+        ),
+      );
+      return;
+    }
+
+    final usuario = Usuario(
+      id: DateTime.now().millisecondsSinceEpoch,
+      nome: nomeController.text.trim(),
+      sobrenome: sobrenomeController.text.trim(),
+      email: emailController.text.trim(),
+      senha: senhaController.text.trim(),
+      idade: _calcularIdade(nascimento),
+      created_at: DateTime.now(),
+    );
+
+    authService.cadastrar(usuario);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Conta criada com sucesso!'),
+      ),
+    );
+
+    context.go('/login');
+  }
+
+  String? _validarTextoObrigatorio(String? value, String campo) {
+    if (value == null || value.trim().isEmpty) {
+      return '$campo é obrigatório';
+    }
+
+    if (value.trim().length < 2) {
+      return '$campo deve ter pelo menos 2 caracteres';
+    }
+
+    return null;
+  }
+
+  String? _validarEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email é obrigatório';
+    }
+
+    final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
+
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Digite um email válido';
+    }
+
+    return null;
+  }
+
+  String? _validarSenha(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Senha é obrigatória';
+    }
+
+    if (value.length < 6) {
+      return 'A senha deve ter pelo menos 6 caracteres';
+    }
+
+    return null;
+  }
+
+  String? _validarDataNascimento(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Data de nascimento é obrigatória';
+    }
+
+    final regex = RegExp(r'^\d{2}/\d{2}/\d{4}$');
+
+    if (!regex.hasMatch(value.trim())) {
+      return 'Use o formato dd/mm/aaaa';
+    }
+
+    final data = _converterDataNascimento(value.trim());
+
+    if (data == null) {
+      return 'Data inválida';
+    }
+
+    if (data.isAfter(DateTime.now())) {
+      return 'Data não pode ser no futuro';
+    }
+
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +198,6 @@ class Cadastro extends StatelessWidget {
                       direction: isWide ? Axis.horizontal : Axis.vertical,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Left panel — logo
                         Expanded(
                           flex: 5,
                           child: Container(
@@ -54,7 +209,6 @@ class Cadastro extends StatelessWidget {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const SizedBox(height: 8),
                                 const Text(
                                   'Crie sua conta',
                                   textAlign: TextAlign.center,
@@ -76,8 +230,6 @@ class Cadastro extends StatelessWidget {
                             ),
                           ),
                         ),
-
-                        // Right panel — cadastro form
                         Expanded(
                           flex: 5,
                           child: Container(
@@ -86,112 +238,152 @@ class Cadastro extends StatelessWidget {
                               horizontal: 28,
                               vertical: 28,
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const Text(
-                                  'Cadastre-se',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 34,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w400,
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Text(
+                                    'Cadastre-se',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 34,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 22),
+
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _FieldColumn(
+                                          label: 'Nome',
+                                          controller: nomeController,
+                                          validator: (value) =>
+                                              _validarTextoObrigatorio(
+                                            value,
+                                            'Nome',
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _FieldColumn(
+                                          label: 'Sobrenome',
+                                          controller: sobrenomeController,
+                                          validator: (value) =>
+                                              _validarTextoObrigatorio(
+                                            value,
+                                            'Sobrenome',
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 14),
+
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _FieldColumn(
+                                          label: 'Profissão',
+                                          controller: profissaoController,
+                                          validator: (value) =>
+                                              _validarTextoObrigatorio(
+                                            value,
+                                            'Profissão',
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _FieldColumn(
+                                          label: 'Data de nascimento',
+                                          controller:
+                                              dataNascimentoController,
+                                          keyboardType:
+                                              TextInputType.datetime,
+                                          validator: _validarDataNascimento,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 14),
+
+                                  _FieldColumn(
+                                    label: 'Email',
+                                    controller: emailController,
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: _validarEmail,
+                                  ),
+
+                                  const SizedBox(height: 14),
+
+                                  _FieldColumn(
+                                    label: 'Senha',
+                                    controller: senhaController,
+                                    obscureText: !_mostrarSenha,
+                                    validator: _validarSenha,
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _mostrarSenha
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                        color: const Color(0xFF363B43),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _mostrarSenha = !_mostrarSenha;
+                                        });
+                                      },
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  SizedBox(
+                                    height: 38,
+                                    child: ElevatedButton(
+                                      onPressed: _cadastrar,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor:
+                                            const Color(0xFF3A3A3A),
+                                        elevation: 0,
+                                        shape: const StadiumBorder(),
+                                        textStyle: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                      child: const Text('Cadastrar'),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  const Divider(
+                                    color: Colors.white54,
+                                    thickness: 1,
                                     height: 1,
                                   ),
-                                ),
-                                const SizedBox(height: 22),
 
-                                // Row: Nome + Sobrenome
-                                Row(
-                                  children: const [
-                                    Expanded(
-                                      child: _FieldColumn(
-                                        label: 'Nome',
-                                        hintText: '',
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: _FieldColumn(
-                                        label: 'Sobrenome',
-                                        hintText: '',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
+                                  const SizedBox(height: 10),
 
-                                // Row: Profissão + Data de nascimento
-                                Row(
-                                  children: const [
-                                    Expanded(
-                                      child: _FieldColumn(
-                                        label: 'Profissão',
-                                        hintText: '',
-                                      ),
+                                  TextButton(
+                                    onPressed: () => context.go('/login'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.white,
                                     ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: _FieldColumn(
-                                        label: 'Data de nascimento',
-                                        hintText: '',
-                                        keyboardType: TextInputType.datetime,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-
-                                // Email (full width)
-                                const _FieldColumn(
-                                  label: 'Email',
-                                  hintText: '',
-                                  keyboardType: TextInputType.emailAddress,
-                                ),
-                                const SizedBox(height: 14),
-
-                                // Senha (full width)
-                                const _FieldColumn(
-                                  label: 'Senha',
-                                  hintText: '',
-                                  obscureText: true,
-                                ),
-                                const SizedBox(height: 20),
-
-                                // Cadastrar button
-                                SizedBox(
-                                  height: 38,
-                                  child: ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: const Color(0xFF3A3A3A),
-                                      elevation: 0,
-                                      shape: const StadiumBorder(),
-                                      textStyle: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                    child: const Text('Cadastrar'),
+                                    child: const Text('Ou faça Login'),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                const Divider(
-                                  color: Colors.white54,
-                                  thickness: 1,
-                                  height: 1,
-                                ),
-                                const SizedBox(height: 10),
-                                TextButton(
-                                  onPressed: () => context.go('/login'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  child: const Text('Ou faça Login'),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -208,19 +400,22 @@ class Cadastro extends StatelessWidget {
   }
 }
 
-/// Label + TextField empilhados verticalmente
 class _FieldColumn extends StatelessWidget {
   const _FieldColumn({
     required this.label,
-    required this.hintText,
+    required this.controller,
+    required this.validator,
     this.keyboardType,
     this.obscureText = false,
+    this.suffixIcon,
   });
 
   final String label;
-  final String hintText;
+  final TextEditingController controller;
+  final String? Function(String?) validator;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -236,59 +431,49 @@ class _FieldColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        _CadastroField(
-          hintText: hintText,
+        TextFormField(
+          controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
-        ),
-      ],
-    );
-  }
-}
-
-class _CadastroField extends StatelessWidget {
-  const _CadastroField({
-    required this.hintText,
-    this.keyboardType,
-    this.obscureText = false,
-  });
-
-  final String hintText;
-  final TextInputType? keyboardType;
-  final bool obscureText;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: TextField(
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Color(0xFFB9B9B9),
-            fontSize: 13,
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 12,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
-            borderSide: const BorderSide(
-              color: Color(0xFFB9C9D8),
-              width: 1,
+          validator: validator,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          decoration: InputDecoration(
+            suffixIcon: suffixIcon,
+            filled: true,
+            fillColor: Colors.white,
+            errorMaxLines: 2,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5),
+              borderSide: const BorderSide(
+                color: Color(0xFFB9C9D8),
+                width: 1,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1,
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
