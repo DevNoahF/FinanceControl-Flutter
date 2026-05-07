@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:finance_control/core/auth/auth_service.dart';
+import 'package:finance_control/core/validators/validador_login_email.dart';
 import 'package:go_router/go_router.dart';
 import '../components/customTextField.dart'; 
 
@@ -157,6 +158,14 @@ class _LoginState extends State<Login> {
                                   height: 38,
                                   child: ElevatedButton(
                                     onPressed: () {
+                                      final emailError = validadorLoginEmail(_emailController.text);
+                                      if (emailError != null) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(emailError)),
+                                        );
+                                        return;
+                                      }
+
                                       authService.login(
                                         context,
                                         _emailController.text,
