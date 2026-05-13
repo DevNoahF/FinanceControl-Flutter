@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:finance_control/models/usuario.dart';
+import 'package:finance_control/models/Usuario.dart';
 
 class AuthService extends ChangeNotifier {
   bool _isAuthenticated = false;

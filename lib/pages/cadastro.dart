@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-import 'package:finance_control/core/auth/auth_service.dart';
-import 'package:finance_control/models/usuario.dart';
+import 'package:finance_control/models/Usuario.dart';
+import 'package:finance_control/features/auth/cadastroNotifier.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
@@ -14,12 +15,13 @@ class Cadastro extends StatefulWidget {
 class _CadastroState extends State<Cadastro> {
   final _formKey = GlobalKey<FormState>();
 
-  final nomeController = TextEditingController();
-  final sobrenomeController = TextEditingController();
-  final profissaoController = TextEditingController();
+  // Controllers permanecem na tela — são responsabilidade de UI
+  final nomeController           = TextEditingController();
+  final sobrenomeController      = TextEditingController();
+  final profissaoController      = TextEditingController();
   final dataNascimentoController = TextEditingController();
-  final emailController = TextEditingController();
-  final senhaController = TextEditingController();
+  final emailController          = TextEditingController();
+  final senhaController          = TextEditingController();
 
   bool _mostrarSenha = false;
 
@@ -34,46 +36,23 @@ class _CadastroState extends State<Cadastro> {
     super.dispose();
   }
 
-  int _calcularIdade(DateTime nascimento) {
-    final hoje = DateTime.now();
-    int idade = hoje.year - nascimento.year;
+  // ------------------------------------------------------------------ //
+  //  Ação de cadastro — tela apenas orquestra, lógica fica no Notifier
+  // ------------------------------------------------------------------ //
 
-    if (hoje.month < nascimento.month ||
-        hoje.month == nascimento.month && hoje.day < nascimento.day) {
-      idade--;
-    }
+  Future<void> _cadastrar() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    return idade;
-  }
+    // context.read: acessa o CadastroNotifier sem escutar rebuilds
+    final notifier = context.read<CadastroNotifier>();
 
-  DateTime? _converterDataNascimento(String value) {
-    try {
-      final partes = value.split('/');
-
-      final dia = int.parse(partes[0]);
-      final mes = int.parse(partes[1]);
-      final ano = int.parse(partes[2]);
-
-      return DateTime(ano, mes, dia);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  void _cadastrar() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    final nascimento = _converterDataNascimento(
+    final nascimento = notifier.converterDataNascimento(
       dataNascimentoController.text.trim(),
     );
 
     if (nascimento == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Data de nascimento inválida'),
-        ),
+        const SnackBar(content: Text('Data de nascimento inválida')),
       );
       return;
     }
@@ -84,56 +63,40 @@ class _CadastroState extends State<Cadastro> {
       sobrenome: sobrenomeController.text.trim(),
       email: emailController.text.trim(),
       senha: senhaController.text.trim(),
-      idade: _calcularIdade(nascimento),
+      idade: notifier.calcularIdade(nascimento),
       created_at: DateTime.now(),
     );
 
-    authService.cadastrar(usuario);
+    final sucesso = await notifier.cadastrar(usuario);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Conta criada com sucesso!'),
-      ),
-    );
-
-    context.go('/login');
+    if (sucesso && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Conta criada com sucesso!')),
+      );
+      context.go('/login');
+    }
   }
 
+  // ------------------------------------------------------------------ //
+  //  Validadores — permanecem na tela por serem regras de formulário
+  // ------------------------------------------------------------------ //
+
   String? _validarTextoObrigatorio(String? value, String campo) {
-    if (value == null || value.trim().isEmpty) {
-      return '$campo é obrigatório';
-    }
-
-    if (value.trim().length < 2) {
-      return '$campo deve ter pelo menos 2 caracteres';
-    }
-
+    if (value == null || value.trim().isEmpty) return '$campo é obrigatório';
+    if (value.trim().length < 2) return '$campo deve ter pelo menos 2 caracteres';
     return null;
   }
 
   String? _validarEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email é obrigatório';
-    }
-
+    if (value == null || value.trim().isEmpty) return 'Email é obrigatório';
     final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
-
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Digite um email válido';
-    }
-
+    if (!emailRegex.hasMatch(value.trim())) return 'Digite um email válido';
     return null;
   }
 
   String? _validarSenha(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Senha é obrigatória';
-    }
-
-    if (value.length < 6) {
-      return 'A senha deve ter pelo menos 6 caracteres';
-    }
-
+    if (value == null || value.isEmpty) return 'Senha é obrigatória';
+    if (value.length < 6) return 'A senha deve ter pelo menos 6 caracteres';
     return null;
   }
 
@@ -141,25 +104,20 @@ class _CadastroState extends State<Cadastro> {
     if (value == null || value.trim().isEmpty) {
       return 'Data de nascimento é obrigatória';
     }
-
     final regex = RegExp(r'^\d{2}/\d{2}/\d{4}$');
+    if (!regex.hasMatch(value.trim())) return 'Use o formato dd/mm/aaaa';
 
-    if (!regex.hasMatch(value.trim())) {
-      return 'Use o formato dd/mm/aaaa';
-    }
-
-    final data = _converterDataNascimento(value.trim());
-
-    if (data == null) {
-      return 'Data inválida';
-    }
-
-    if (data.isAfter(DateTime.now())) {
-      return 'Data não pode ser no futuro';
-    }
-
+    // reutiliza o conversor do Notifier para não duplicar lógica
+    final notifier = context.read<CadastroNotifier>();
+    final data = notifier.converterDataNascimento(value.trim());
+    if (data == null) return 'Data inválida';
+    if (data.isAfter(DateTime.now())) return 'Data não pode ser no futuro';
     return null;
   }
+
+  // ------------------------------------------------------------------ //
+  //  Build
+  // ------------------------------------------------------------------ //
 
   @override
   Widget build(BuildContext context) {
@@ -198,6 +156,7 @@ class _CadastroState extends State<Cadastro> {
                       direction: isWide ? Axis.horizontal : Axis.vertical,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // ---- Painel esquerdo — logo ----
                         Expanded(
                           flex: 5,
                           child: Container(
@@ -230,6 +189,8 @@ class _CadastroState extends State<Cadastro> {
                             ),
                           ),
                         ),
+
+                        // ---- Painel direito — formulário ----
                         Expanded(
                           flex: 5,
                           child: Container(
@@ -262,11 +223,8 @@ class _CadastroState extends State<Cadastro> {
                                         child: _FieldColumn(
                                           label: 'Nome',
                                           controller: nomeController,
-                                          validator: (value) =>
-                                              _validarTextoObrigatorio(
-                                            value,
-                                            'Nome',
-                                          ),
+                                          validator: (v) =>
+                                              _validarTextoObrigatorio(v, 'Nome'),
                                         ),
                                       ),
                                       const SizedBox(width: 12),
@@ -274,11 +232,8 @@ class _CadastroState extends State<Cadastro> {
                                         child: _FieldColumn(
                                           label: 'Sobrenome',
                                           controller: sobrenomeController,
-                                          validator: (value) =>
-                                              _validarTextoObrigatorio(
-                                            value,
-                                            'Sobrenome',
-                                          ),
+                                          validator: (v) =>
+                                              _validarTextoObrigatorio(v, 'Sobrenome'),
                                         ),
                                       ),
                                     ],
@@ -292,21 +247,16 @@ class _CadastroState extends State<Cadastro> {
                                         child: _FieldColumn(
                                           label: 'Profissão',
                                           controller: profissaoController,
-                                          validator: (value) =>
-                                              _validarTextoObrigatorio(
-                                            value,
-                                            'Profissão',
-                                          ),
+                                          validator: (v) =>
+                                              _validarTextoObrigatorio(v, 'Profissão'),
                                         ),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: _FieldColumn(
                                           label: 'Data de nascimento',
-                                          controller:
-                                              dataNascimentoController,
-                                          keyboardType:
-                                              TextInputType.datetime,
+                                          controller: dataNascimentoController,
+                                          keyboardType: TextInputType.datetime,
                                           validator: _validarDataNascimento,
                                         ),
                                       ),
@@ -336,33 +286,71 @@ class _CadastroState extends State<Cadastro> {
                                             : Icons.visibility,
                                         color: const Color(0xFF363B43),
                                       ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _mostrarSenha = !_mostrarSenha;
-                                        });
-                                      },
+                                      onPressed: () => setState(
+                                        () => _mostrarSenha = !_mostrarSenha,
+                                      ),
                                     ),
                                   ),
 
                                   const SizedBox(height: 20),
 
-                                  SizedBox(
-                                    height: 38,
-                                    child: ElevatedButton(
-                                      onPressed: _cadastrar,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor:
-                                            const Color(0xFF3A3A3A),
-                                        elevation: 0,
-                                        shape: const StadiumBorder(),
-                                        textStyle: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                      child: const Text('Cadastrar'),
-                                    ),
+                                  // ---- Consumer: reage ao loading e ao erro ----
+                                  Consumer<CadastroNotifier>(
+                                    builder: (context, notifier, _) {
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          // Exibe mensagem de erro vinda do Notifier
+                                          if (notifier.erro != null)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 10,
+                                              ),
+                                              child: Text(
+                                                notifier.erro!,
+                                                style: const TextStyle(
+                                                  color: Colors.redAccent,
+                                                  fontSize: 13,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+
+                                          // Botão desabilitado durante o loading
+                                          SizedBox(
+                                            height: 38,
+                                            child: ElevatedButton(
+                                              onPressed: notifier.loading
+                                                  ? null
+                                                  : _cadastrar,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.white,
+                                                foregroundColor:
+                                                    const Color(0xFF3A3A3A),
+                                                elevation: 0,
+                                                shape: const StadiumBorder(),
+                                                textStyle: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w400,
+                                                ),
+                                              ),
+                                              child: notifier.loading
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: Color(0xFF3A3A3A),
+                                                      ),
+                                                    )
+                                                  : const Text('Cadastrar'),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   ),
 
                                   const SizedBox(height: 16),
@@ -399,6 +387,10 @@ class _CadastroState extends State<Cadastro> {
     );
   }
 }
+
+// ------------------------------------------------------------------ //
+//  Widgets auxiliares (sem alteração funcional)
+// ------------------------------------------------------------------ //
 
 class _FieldColumn extends StatelessWidget {
   const _FieldColumn({
@@ -459,17 +451,11 @@ class _FieldColumn extends StatelessWidget {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(5),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 1,
-              ),
+              borderSide: const BorderSide(color: Colors.red, width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(5),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 1,
-              ),
+              borderSide: const BorderSide(color: Colors.red, width: 1),
             ),
           ),
         ),
