@@ -4,16 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../models/transacao.dart';
 import '../components/menuDropdown.dart';
 import '../data/transacoes_data.dart';
-import '../core/auth/auth_service.dart'; // 👈 IMPORTANTE
+import '../core/auth/auth_service.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class HomeController extends ChangeNotifier {
+  List<Transacao> get listaTransacoes => transacoes;
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
   double get totalEntradas => transacoes
       .where((t) => t.isEntrada)
       .fold(0, (sum, t) => sum + t.valor);
@@ -24,14 +19,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
   double get restante => totalEntradas - totalSaidas;
 
-  void _excluirTransacao(int index) {
-    setState(() {
-      transacoes.removeAt(index);
-    });
+  void excluirTransacao(int index) {
+    transacoes.removeAt(index);
+    notifyListeners();
   }
 
+  void editarTransacao({
+    required int index,
+    required String titulo,
+    required String descricao,
+    required double valor,
+    required bool isEntrada,
+  }) {
+    transacoes[index] = Transacao(
+      titulo: titulo,
+      descricao: descricao,
+      valor: valor,
+      isEntrada: isEntrada,
+    );
+
+    notifyListeners();
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final HomeController controller = HomeController();
+
   void _editarTransacao(int index) {
-    final transacao = transacoes[index];
+    final transacao = controller.listaTransacoes[index];
+
     final formKey = GlobalKey<FormState>();
     final tituloCtrl = TextEditingController(text: transacao.titulo);
     final descricaoCtrl = TextEditingController(text: transacao.descricao);
@@ -81,11 +104,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Informe um valor';
                       }
-                      final parsedValue =
-                          double.tryParse(value.replaceAll(',', '.'));
+
+                      final parsedValue = double.tryParse(
+                        value.replaceAll(',', '.'),
+                      );
+
                       if (parsedValue == null || parsedValue <= 0) {
                         return 'Informe um valor numérico válido';
                       }
+
                       return null;
                     },
                   ),
@@ -115,15 +142,20 @@ class _HomeScreenState extends State<HomeScreen> {
           TextButton(
             onPressed: () {
               if (formKey.currentState?.validate() ?? false) {
-                setState(() {
-                  transacoes[index] = Transacao(
-                    titulo: tituloCtrl.text,
-                    descricao: descricaoCtrl.text,
-                    valor: double.tryParse(valorCtrl.text.replaceAll(',', '.')) ??
-                        transacao.valor,
-                    isEntrada: isEntrada,
-                  );
-                });
+                final valor = double.tryParse(
+                  valorCtrl.text.replaceAll(',', '.'),
+                );
+
+                if (valor == null) return;
+
+                controller.editarTransacao(
+                  index: index,
+                  titulo: tituloCtrl.text,
+                  descricao: descricaoCtrl.text,
+                  valor: valor,
+                  isEntrada: isEntrada,
+                );
+
                 Navigator.pop(ctx);
               }
             },
@@ -135,249 +167,268 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final nomeUsuario = authService.usuarioLogado?.nome ?? 'Usuário'; // 🔥
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFE0E0E0),
-        elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: MenuDropdown(nomeUsuario: nomeUsuario), // 🔥 aqui
-            ),
+  @override
+  Widget build(BuildContext context) {
+    final nomeUsuario = authService.usuarioLogado?.nome ?? 'Usuário';
+
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: const Color(0xFFE0E0E0),
+            elevation: 0,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(
+                  child: MenuDropdown(nomeUsuario: nomeUsuario),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color.fromARGB(255, 3, 148, 24),
-              ),
-              child: Text(
-                'Finanças',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            ListTile(
-              title: const Text('Dashboard'),
-              leading: const Icon(Icons.dashboard),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/home');
-              },
-            ),
-            ListTile(
-              title: const Text('Cadastrar Transação'),
-              leading: const Icon(Icons.person_add),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/input');
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
+          drawer: Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
               children: [
-                _CardResumo(
-                  titulo: 'Entradas',
-                  valor: totalEntradas,
-                  cor: Colors.green,
+                const DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 3, 148, 24),
+                  ),
+                  child: Text(
+                    'Finanças',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 12),
-                _CardResumo(
-                  titulo: 'Saídas',
-                  valor: totalSaidas,
-                  cor: Colors.red,
+                ListTile(
+                  title: const Text('Dashboard'),
+                  leading: const Icon(Icons.dashboard),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/home');
+                  },
                 ),
-                const SizedBox(width: 12),
-                _CardResumo(
-                  titulo: 'Restante',
-                  valor: restante,
-                  cor: Colors.blue[800]!,
+                ListTile(
+                  title: const Text('Cadastrar Transação'),
+                  leading: const Icon(Icons.person_add),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/input');
+                  },
                 ),
               ],
             ),
-            const SizedBox(height: 40),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 70,
-                            child: Text(
-                              'status',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'título',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'descrição',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 70,
-                            child: Text(
-                              'valor',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 60),
-                        ],
-                      ),
+                    _CardResumo(
+                      titulo: 'Entradas',
+                      valor: controller.totalEntradas,
+                      cor: Colors.green,
                     ),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: transacoes.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Nenhuma transação cadastrada ainda.',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            )
-                          : ListView.separated(
-                              itemCount: transacoes.length,
-                              separatorBuilder: (context, index) =>
-                                  const Divider(height: 1),
-                              itemBuilder: (ctx, i) {
-                                final t = transacoes[i];
-
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 10,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 70,
-                                        child: Center(
-                                          child: Icon(
-                                            t.isEntrada
-                                                ? Icons.add_circle
-                                                : Icons.remove_circle,
-                                            color: t.isEntrada
-                                                ? Colors.green
-                                                : Colors.red,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          t.titulo,
-                                          style: const TextStyle(fontSize: 13),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          t.descricao,
-                                          style: const TextStyle(fontSize: 13),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 70,
-                                        child: Text(
-                                          'R\$ ${t.valor.toStringAsFixed(2)}',
-                                          style: const TextStyle(fontSize: 13),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 60,
-                                        child: Row(
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.edit,
-                                                color: Colors.orange,
-                                                size: 20,
-                                              ),
-                                              onPressed: () =>
-                                                  _editarTransacao(i),
-                                              constraints:
-                                                  const BoxConstraints(),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 4,
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.cancel,
-                                                color: Colors.red,
-                                                size: 20,
-                                              ),
-                                              onPressed: () =>
-                                                  _excluirTransacao(i),
-                                              constraints:
-                                                  const BoxConstraints(),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 4,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                    const SizedBox(width: 12),
+                    _CardResumo(
+                      titulo: 'Saídas',
+                      valor: controller.totalSaidas,
+                      cor: Colors.red,
+                    ),
+                    const SizedBox(width: 12),
+                    _CardResumo(
+                      titulo: 'Restante',
+                      valor: controller.restante,
+                      cor: Colors.blue[800]!,
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 40),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 70,
+                                child: Text(
+                                  'status',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'título',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'descrição',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 70,
+                                child: Text(
+                                  'valor',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 60),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        Expanded(
+                          child: controller.listaTransacoes.isEmpty
+                              ? const Center(
+                                  child: Text(
+                                    'Nenhuma transação cadastrada ainda ;-;',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                )
+                              : ListView.separated(
+                                  itemCount: controller.listaTransacoes.length,
+                                  separatorBuilder: (context, index) =>
+                                      const Divider(height: 1),
+                                  itemBuilder: (ctx, i) {
+                                    final t = controller.listaTransacoes[i];
+
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 70,
+                                            child: Center(
+                                              child: Icon(
+                                                t.isEntrada
+                                                    ? Icons.add_circle
+                                                    : Icons.remove_circle,
+                                                color: t.isEntrada
+                                                    ? Colors.green
+                                                    : Colors.red,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              t.titulo,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              t.descricao,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: 70,
+                                            child: Text(
+                                              'R\$ ${t.valor.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: 60,
+                                            child: Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit,
+                                                    color: Colors.orange,
+                                                    size: 20,
+                                                  ),
+                                                  onPressed: () =>
+                                                      _editarTransacao(i),
+                                                  constraints:
+                                                      const BoxConstraints(),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 4,
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.cancel,
+                                                    color: Colors.red,
+                                                    size: 20,
+                                                  ),
+                                                  onPressed: () {
+                                                    controller
+                                                        .excluirTransacao(i);
+                                                  },
+                                                  constraints:
+                                                      const BoxConstraints(),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 4,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
