@@ -15,7 +15,6 @@ class Cadastro extends StatefulWidget {
 class _CadastroState extends State<Cadastro> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers permanecem na tela — são responsabilidade de UI
   final nomeController           = TextEditingController();
   final sobrenomeController      = TextEditingController();
   final profissaoController      = TextEditingController();
@@ -36,14 +35,10 @@ class _CadastroState extends State<Cadastro> {
     super.dispose();
   }
 
-  // ------------------------------------------------------------------ //
-  //  Ação de cadastro — tela apenas orquestra, lógica fica no Notifier
-  // ------------------------------------------------------------------ //
 
   Future<void> _cadastrar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // context.read: acessa o CadastroNotifier sem escutar rebuilds
     final notifier = context.read<CadastroNotifier>();
 
     final nascimento = notifier.converterDataNascimento(
@@ -77,9 +72,6 @@ class _CadastroState extends State<Cadastro> {
     }
   }
 
-  // ------------------------------------------------------------------ //
-  //  Validadores — permanecem na tela por serem regras de formulário
-  // ------------------------------------------------------------------ //
 
   String? _validarTextoObrigatorio(String? value, String campo) {
     if (value == null || value.trim().isEmpty) return '$campo é obrigatório';
@@ -107,17 +99,12 @@ class _CadastroState extends State<Cadastro> {
     final regex = RegExp(r'^\d{2}/\d{2}/\d{4}$');
     if (!regex.hasMatch(value.trim())) return 'Use o formato dd/mm/aaaa';
 
-    // reutiliza o conversor do Notifier para não duplicar lógica
     final notifier = context.read<CadastroNotifier>();
     final data = notifier.converterDataNascimento(value.trim());
     if (data == null) return 'Data inválida';
     if (data.isAfter(DateTime.now())) return 'Data não pode ser no futuro';
     return null;
   }
-
-  // ------------------------------------------------------------------ //
-  //  Build
-  // ------------------------------------------------------------------ //
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +143,6 @@ class _CadastroState extends State<Cadastro> {
                       direction: isWide ? Axis.horizontal : Axis.vertical,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // ---- Painel esquerdo — logo ----
                         Expanded(
                           flex: 5,
                           child: Container(
@@ -190,7 +176,6 @@ class _CadastroState extends State<Cadastro> {
                           ),
                         ),
 
-                        // ---- Painel direito — formulário ----
                         Expanded(
                           flex: 5,
                           child: Container(
@@ -294,14 +279,12 @@ class _CadastroState extends State<Cadastro> {
 
                                   const SizedBox(height: 20),
 
-                                  // ---- Consumer: reage ao loading e ao erro ----
                                   Consumer<CadastroNotifier>(
                                     builder: (context, notifier, _) {
                                       return Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.stretch,
                                         children: [
-                                          // Exibe mensagem de erro vinda do Notifier
                                           if (notifier.erro != null)
                                             Padding(
                                               padding: const EdgeInsets.only(
@@ -317,7 +300,6 @@ class _CadastroState extends State<Cadastro> {
                                               ),
                                             ),
 
-                                          // Botão desabilitado durante o loading
                                           SizedBox(
                                             height: 38,
                                             child: ElevatedButton(
@@ -388,9 +370,6 @@ class _CadastroState extends State<Cadastro> {
   }
 }
 
-// ------------------------------------------------------------------ //
-//  Widgets auxiliares (sem alteração funcional)
-// ------------------------------------------------------------------ //
 
 class _FieldColumn extends StatelessWidget {
   const _FieldColumn({

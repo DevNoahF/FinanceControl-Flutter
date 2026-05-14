@@ -37,7 +37,7 @@ class AuthService extends ChangeNotifier {
             u.senha == password.trim(),
       );
 
-      _usuarioLogado = usuario; // 🔥 guarda o usuário logado
+      _usuarioLogado = usuario;
       _updateAuth(true);
 
     } catch (e) {
@@ -50,7 +50,7 @@ class AuthService extends ChangeNotifier {
   }
 
   void logout() {
-    _usuarioLogado = null; // 🔥 limpa usuário
+    _usuarioLogado = null;
     _updateAuth(false);
   }
 

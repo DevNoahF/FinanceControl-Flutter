@@ -4,7 +4,6 @@ import '../models/transacao.dart';
 import '../data/transacoes_data.dart';
 
 /// ChangeNotifier responsável por toda a lógica de transações.
-/// Registrado no GetIt e exposto via MultiProvider na raiz da aplicação.
 class TransacaoNotifier extends ChangeNotifier {
   bool _loading = false;
   String? _erro;
@@ -12,10 +11,7 @@ class TransacaoNotifier extends ChangeNotifier {
   bool get loading => _loading;
   String? get erro => _erro;
 
-  // ------------------------------------------------------------------ //
-  //  Validação (saiu da tela)
-  // ------------------------------------------------------------------ //
-
+ 
   String? validar({
     required String titulo,
     required String valorRaw,
@@ -31,11 +27,7 @@ class TransacaoNotifier extends ChangeNotifier {
     return null; // sem erros
   }
 
-  // ------------------------------------------------------------------ //
-  //  Ação principal (saiu da tela)
-  // ------------------------------------------------------------------ //
-
-  Future<bool> salvar({
+   Future<bool> salvar({
     required String titulo,
     required String descricao,
     required String valorRaw,
@@ -67,7 +59,6 @@ class TransacaoNotifier extends ChangeNotifier {
     }
   }
 
-  /// Limpa o estado de erro (útil ao reabrir a tela)
   void limparErro() {
     _erro = null;
     notifyListeners();
