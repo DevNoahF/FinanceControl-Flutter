@@ -5,7 +5,7 @@ import 'package:finance_control/core/auth/auth_service.dart';
 class MenuDropdown extends StatelessWidget {
   final String nomeUsuario;
 
-  const MenuDropdown({Key? key, required this.nomeUsuario}) : super(key: key);
+  const MenuDropdown({super.key, required this.nomeUsuario});
 
   @override
 
