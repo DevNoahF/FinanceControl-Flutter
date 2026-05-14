@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-import '../models/transacao.dart';
-import '../data/transacoes_data.dart';
+import '../notifiers/transacao_notifier.dart';
 
 class InputScreen extends StatefulWidget {
   const InputScreen({super.key});
@@ -12,56 +12,64 @@ class InputScreen extends StatefulWidget {
 }
 
 class _InputScreenState extends State<InputScreen> {
+  // Tipo permanece na tela — é estado de UI puro
   String tipo = 'entrada';
 
-  final TextEditingController tituloCtrl = TextEditingController();
-  final TextEditingController valorCtrl = TextEditingController();
+  final TextEditingController tituloCtrl   = TextEditingController();
+  final TextEditingController valorCtrl    = TextEditingController();
   final TextEditingController descricaoCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    tituloCtrl.dispose();
+    valorCtrl.dispose();
+    descricaoCtrl.dispose();
+    super.dispose();
+  }
 
   void _limparCampos() {
     tituloCtrl.clear();
     valorCtrl.clear();
     descricaoCtrl.clear();
-
-    setState(() {
-      tipo = 'entrada';
-    });
+    setState(() => tipo = 'entrada');
   }
 
-  void _salvar() {
-    final valor = double.tryParse(
-      valorCtrl.text.replaceAll(',', '.'),
+  // ------------------------------------------------------------------ //
+  //  Ação de salvar — tela apenas orquestra, lógica fica no Notifier
+  // ------------------------------------------------------------------ //
+
+  Future<void> _salvar() async {
+    // context.read: acessa o Notifier sem escutar rebuilds
+    final notifier = context.read<TransacaoNotifier>();
+
+    // Validação delegada ao Notifier
+    final erroValidacao = notifier.validar(
+      titulo:   tituloCtrl.text,
+      valorRaw: valorCtrl.text,
+      descricao: descricaoCtrl.text,
     );
 
-    if (tituloCtrl.text.isEmpty ||
-        valor == null ||
-        descricaoCtrl.text.isEmpty) {
+    if (erroValidacao != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preencha todos os campos corretamente'),
-        ),
+        SnackBar(content: Text(erroValidacao)),
       );
       return;
     }
 
-    transacoes.add(
-      Transacao(
-        titulo: tituloCtrl.text,
-        descricao: descricaoCtrl.text,
-        valor: valor,
-        isEntrada: tipo == 'entrada',
-      ),
+    final sucesso = await notifier.salvar(
+      titulo:    tituloCtrl.text,
+      descricao: descricaoCtrl.text,
+      valorRaw:  valorCtrl.text,
+      tipo:      tipo,
     );
 
-    _limparCampos();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Transação adicionada com sucesso!'),
-      ),
-    );
-
-    context.go('/home');
+    if (sucesso && mounted) {
+      _limparCampos();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Transação adicionada com sucesso!')),
+      );
+      context.go('/home');
+    }
   }
 
   @override
@@ -85,7 +93,7 @@ class _InputScreenState extends State<InputScreen> {
           ),
           child: Row(
             children: [
-              // LADO ESQUERDO
+              // ---- Painel esquerdo ----
               Expanded(
                 flex: 4,
                 child: Container(
@@ -135,7 +143,7 @@ class _InputScreenState extends State<InputScreen> {
                 ),
               ),
 
-              // LADO DIREITO
+              // ---- Painel direito ----
               Expanded(
                 flex: 5,
                 child: Padding(
@@ -147,8 +155,7 @@ class _InputScreenState extends State<InputScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Novo lançamento',
@@ -176,23 +183,13 @@ class _InputScreenState extends State<InputScreen> {
                           _TipoChip(
                             label: 'Entrada',
                             selected: tipo == 'entrada',
-                            onTap: () {
-                              setState(() {
-                                tipo = 'entrada';
-                              });
-                            },
+                            onTap: () => setState(() => tipo = 'entrada'),
                           ),
-
                           const SizedBox(width: 10),
-
                           _TipoChip(
                             label: 'Saída',
                             selected: tipo == 'saida',
-                            onTap: () {
-                              setState(() {
-                                tipo = 'saida';
-                              });
-                            },
+                            onTap: () => setState(() => tipo = 'saida'),
                           ),
                         ],
                       ),
@@ -202,11 +199,9 @@ class _InputScreenState extends State<InputScreen> {
                       // TÍTULO
                       const _CustomLabel('Título'),
                       const SizedBox(height: 10),
-
                       _CustomInput(
                         controller: tituloCtrl,
-                        hintText:
-                            'Ex: Salário, Mercado, Aluguel...',
+                        hintText: 'Ex: Salário, Mercado, Aluguel...',
                         icon: Icons.title_rounded,
                       ),
 
@@ -215,11 +210,13 @@ class _InputScreenState extends State<InputScreen> {
                       // VALOR
                       const _CustomLabel('Valor'),
                       const SizedBox(height: 10),
-
                       _CustomInput(
                         controller: valorCtrl,
                         hintText: 'Digite o valor',
                         icon: Icons.attach_money,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                       ),
 
                       const SizedBox(height: 22),
@@ -227,42 +224,75 @@ class _InputScreenState extends State<InputScreen> {
                       // DESCRIÇÃO
                       const _CustomLabel('Descrição'),
                       const SizedBox(height: 10),
-
                       _CustomInput(
                         controller: descricaoCtrl,
-                        hintText:
-                            'Ex: salário mensal, compra no mercado...',
+                        hintText: 'Ex: salário mensal, compra no mercado...',
                         icon: Icons.edit_note_rounded,
                       ),
 
                       const Spacer(),
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 56,
-                              child: OutlinedButton(
-                                onPressed: _limparCampos,
-                                child: const Text('Limpar'),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 16),
-
-                          Expanded(
-                            child: SizedBox(
-                              height: 56,
-                              child: ElevatedButton(
-                                onPressed: _salvar,
-                                child: const Text(
-                                  'Salvar lançamento',
+                      // ---- Consumer: reage ao loading e ao erro ----
+                      Consumer<TransacaoNotifier>(
+                        builder: (context, notifier, _) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Exibe erro vindo do Notifier
+                              if (notifier.erro != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                    notifier.erro!,
+                                    style: const TextStyle(
+                                      color: Colors.redAccent,
+                                      fontSize: 13,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
+
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 56,
+                                      child: OutlinedButton(
+                                        // Desabilitado durante o loading
+                                        onPressed: notifier.loading
+                                            ? null
+                                            : _limparCampos,
+                                        child: const Text('Limpar'),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 56,
+                                      child: ElevatedButton(
+                                        // Desabilitado durante o loading
+                                        onPressed: notifier.loading
+                                            ? null
+                                            : _salvar,
+                                        child: notifier.loading
+                                            ? const SizedBox(
+                                                width: 22,
+                                                height: 22,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                ),
+                                              )
+                                            : const Text('Salvar lançamento'),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                        ],
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -275,6 +305,10 @@ class _InputScreenState extends State<InputScreen> {
     );
   }
 }
+
+// ------------------------------------------------------------------ //
+//  Widgets auxiliares
+// ------------------------------------------------------------------ //
 
 class _CustomLabel extends StatelessWidget {
   final String text;
@@ -297,17 +331,20 @@ class _CustomInput extends StatelessWidget {
   final String hintText;
   final IconData icon;
   final TextEditingController controller;
+  final TextInputType? keyboardType;
 
   const _CustomInput({
     required this.hintText,
     required this.icon,
     required this.controller,
+    this.keyboardType,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: hintText,
         prefixIcon: Icon(icon),
@@ -340,9 +377,7 @@ class _TipoChip extends StatelessWidget {
           vertical: 12,
         ),
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFF111827)
-              : Colors.grey[200],
+          color: selected ? const Color(0xFF111827) : Colors.grey[200],
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(

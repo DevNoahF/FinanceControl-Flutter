@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:finance_control/core/router/app_router.dart';
 import 'package:finance_control/features/auth/cadastroNotifier.dart';
+import 'package:finance_control/notifiers/transacao_notifier.dart';
 import 'package:provider/provider.dart';
 
 
@@ -13,8 +14,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CadastroNotifier(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CadastroNotifier()),
+        ChangeNotifierProvider(create: (_) => TransacaoNotifier()),
+      ],
       child: MaterialApp.router(
         title: 'Finanças',
         debugShowCheckedModeBanner: false,
