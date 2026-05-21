@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:finance_control/core/auth/auth_service.dart';
 import 'package:finance_control/models/Usuario.dart';
 
-/// ChangeNotifier responsável por toda a lógica de cadastro.
+
 class CadastroNotifier extends ChangeNotifier {
   final AuthService _authService = authService;
 
@@ -13,9 +13,7 @@ class CadastroNotifier extends ChangeNotifier {
   bool get loading => _loading;
   String? get erro => _erro;
 
-  // ------------------------------------------------------------------ //
-  //  Helpers de domínio (saíram da tela)
-  // ------------------------------------------------------------------ //
+
 
   int calcularIdade(DateTime nascimento) {
     final hoje = DateTime.now();
@@ -43,9 +41,7 @@ class CadastroNotifier extends ChangeNotifier {
     }
   }
 
-  // ------------------------------------------------------------------ //
-  //  Ação principal
-  // ------------------------------------------------------------------ //
+
 
   Future<bool> cadastrar(Usuario usuario) async {
     _loading = true;
@@ -64,7 +60,6 @@ class CadastroNotifier extends ChangeNotifier {
     }
   }
 
-  /// Limpa o estado de erro (útil ao reabrir a tela)
   void limparErro() {
     _erro = null;
     notifyListeners();

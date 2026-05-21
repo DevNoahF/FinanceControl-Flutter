@@ -12,7 +12,7 @@ class InputScreen extends StatefulWidget {
 }
 
 class _InputScreenState extends State<InputScreen> {
-  // Tipo permanece na tela — é estado de UI puro
+
   String tipo = 'entrada';
 
   final TextEditingController tituloCtrl   = TextEditingController();
@@ -34,15 +34,13 @@ class _InputScreenState extends State<InputScreen> {
     setState(() => tipo = 'entrada');
   }
 
-  // ------------------------------------------------------------------ //
-  //  Ação de salvar — tela apenas orquestra, lógica fica no Notifier
-  // ------------------------------------------------------------------ //
+
 
   Future<void> _salvar() async {
-    // context.read: acessa o Notifier sem escutar rebuilds
+
     final notifier = context.read<TransacaoNotifier>();
 
-    // Validação delegada ao Notifier
+
     final erroValidacao = notifier.validar(
       titulo:   tituloCtrl.text,
       valorRaw: valorCtrl.text,
@@ -93,7 +91,7 @@ class _InputScreenState extends State<InputScreen> {
           ),
           child: Row(
             children: [
-              // ---- Painel esquerdo ----
+
               Expanded(
                 flex: 4,
                 child: Container(
@@ -143,7 +141,6 @@ class _InputScreenState extends State<InputScreen> {
                 ),
               ),
 
-              // ---- Painel direito ----
               Expanded(
                 flex: 5,
                 child: Padding(
@@ -196,7 +193,7 @@ class _InputScreenState extends State<InputScreen> {
 
                       const SizedBox(height: 22),
 
-                      // TÍTULO
+
                       const _CustomLabel('Título'),
                       const SizedBox(height: 10),
                       _CustomInput(
@@ -232,7 +229,7 @@ class _InputScreenState extends State<InputScreen> {
 
                       const Spacer(),
 
-                      // ---- Consumer: reage ao loading e ao erro ----
+
                       Consumer<TransacaoNotifier>(
                         builder: (context, notifier, _) {
                           return Column(
@@ -306,9 +303,7 @@ class _InputScreenState extends State<InputScreen> {
   }
 }
 
-// ------------------------------------------------------------------ //
-//  Widgets auxiliares
-// ------------------------------------------------------------------ //
+
 
 class _CustomLabel extends StatelessWidget {
   final String text;
