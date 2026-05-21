@@ -58,6 +58,7 @@ class _CadastroState extends State<Cadastro> {
       sobrenome: sobrenomeController.text.trim(),
       email: emailController.text.trim(),
       senha: senhaController.text.trim(),
+      profissao: profissaoController.text.trim(),
       idade: notifier.calcularIdade(nascimento),
       created_at: DateTime.now(),
     );

@@ -12,8 +12,10 @@ class AuthService extends ChangeNotifier {
       nome: 'Admin',
       sobrenome: 'Teste',
       email: 'admin@teste.com',
-      senha: '123',
+      senha: Usuario.hashSenha('123'),
       idade: 20,
+      profissao: 'Administrador',
+      role: 'adm',
       created_at: DateTime.now(),
     ),
   ];
@@ -25,7 +27,9 @@ class AuthService extends ChangeNotifier {
   List<Usuario> get usuarios => _usuarios;
 
   void cadastrar(Usuario usuario) {
-    _usuarios.add(usuario);
+    _usuarios.add(
+      usuario.copyWith(senha: Usuario.hashSenha(usuario.senha)),
+    );
     notifyListeners();
   }
 
@@ -34,7 +38,7 @@ class AuthService extends ChangeNotifier {
       final usuario = _usuarios.firstWhere(
         (u) =>
             u.email == email.trim() &&
-            u.senha == password.trim(),
+        u.senha == Usuario.hashSenha(password),
       );
 
       _usuarioLogado = usuario;

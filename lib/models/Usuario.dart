@@ -1,10 +1,16 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+
 class Usuario {
   final int id;
   final String nome;
   final String sobrenome;
   final String email;
   final String senha;
+  final String profissao;
   final int idade;
+  final String role;
   final DateTime created_at;
   final DateTime? updated_at;
 
@@ -13,38 +19,50 @@ class Usuario {
     required this.nome,
     required this.sobrenome,
     required this.email,
-    required this.senha,
+    required String senha,
+    this.profissao = '',
     required this.idade,
+    this.role = 'user',
     required this.created_at,
     this.updated_at,
-  });
+  }) : senha = senha;
 
-  factory Usuario.fromJson(Map<String, dynamic> json) {
+  static String hashSenha(String senha) {
+    return sha256.convert(utf8.encode(senha.trim())).toString();
+  }
+
+  factory Usuario.fromMap(Map<String, dynamic> map) {
     return Usuario(
-      id: json['id'] as int,
-      nome: json['nome'] as String,
-      sobrenome: json['sobrenome'] as String,
-      email: json["email"] as String,
-      senha: json["senha"] as String,
-      idade: json["idade"] as int,
-      created_at: json[DateTime.now()] as DateTime,
-      updated_at: json["updated_at"] as DateTime?,
+      id: map['id'] as int? ?? 0,
+      nome: map['nome'] as String,
+      sobrenome: map['sobrenome'] as String,
+      email: map['email'] as String,
+      senha: map['senha_hash'] as String? ?? map['senha'] as String? ?? '',
+      profissao: map['profissao'] as String? ?? '',
+      idade: map['idade'] as int? ?? 0,
+      role: map['role'] as String? ?? 'user',
+      created_at: _parseDate(map['created_at']) ?? DateTime.now(),
+      updated_at: _parseDate(map['updated_at']),
     );
   }
 
-  Map<String, dynamic> toJson() {
+  factory Usuario.fromJson(Map<String, dynamic> json) => Usuario.fromMap(json);
+
+  Map<String, dynamic> toMap() {
     return {
-      "id": id,
-      "nome": nome,
-      "sobrenome": sobrenome,
-      "email": email,
-      "senha": senha,
-      "idade": idade,
-      "created_at": created_at,
-      if (updated_at != null) "updated_at": updated_at,
-      "updated_at": updated_at,
+      'nome': nome,
+      'sobrenome': sobrenome,
+      'email': email,
+      'senha_hash': senha,
+      'profissao': profissao,
+      'idade': idade,
+      'role': role,
+      'created_at': created_at.toIso8601String(),
+      if (updated_at != null) 'updated_at': updated_at!.toIso8601String(),
     };
   }
+
+  Map<String, dynamic> toJson() => toMap();
 
   Usuario copyWith({
     int? id,
@@ -52,18 +70,29 @@ class Usuario {
     String? sobrenome,
     String? email,
     String? senha,
+    String? profissao,
     int? idade,
+    String? role,
+    DateTime? created_at,
     DateTime? updated_at,
   }) {
     return Usuario(
-      id: this.id,
+      id: id ?? this.id,
       nome: nome ?? this.nome,
       sobrenome: sobrenome ?? this.sobrenome,
       email: email ?? this.email,
       senha: senha ?? this.senha,
+      profissao: profissao ?? this.profissao,
       idade: idade ?? this.idade,
-      created_at: created_at,
+      role: role ?? this.role,
+      created_at: created_at ?? this.created_at,
       updated_at: updated_at ?? this.updated_at,
     );
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    return DateTime.parse(value as String);
   }
 }
