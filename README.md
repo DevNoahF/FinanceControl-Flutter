@@ -3,9 +3,10 @@
 Aplicativo Flutter para controle financeiro.
 
 Estado atual da persistência:
-- a interface e os notifiers ainda operam em memória;
+- a app usa SQLite local como banco principal da interface;
 - a camada de SQLite local já existe em `lib/data/database` com schema e mappers preparados;
-- o MySQL via Docker sobe com schema criado automaticamente, mas ainda nao recebe dados da app.
+- o MySQL via Docker sobe com schema criado automaticamente, mas serve mais para inspeção e validação do schema;
+- no navegador, o SQLite depende dos binários web do `sqflite`; sem isso, a tela pode abrir branca ou parar no carregamento.
 
 Para entender a estrutura de banco e o que esta ativo agora, leia [docs/database.md](docs/database.md).
 
@@ -95,6 +96,8 @@ MYSQL_PORT=3307
 Nesse caso, a conexao pelo seu computador deve usar a porta `3307`.
 
 Observacao importante: esse banco do Docker esta preparado para schema e inspeção, mas a app Flutter ainda nao grava nele diretamente.
+
+No navegador, a persistencia local usa a versão web do SQLite. Se os arquivos do worker do `sqflite` nao estiverem servidos corretamente, o app pode abrir com a barra superior e o resto da tela em branco. Isso nao significa que o layout sumiu; significa que o banco nao terminou de inicializar no web.
 
 ## Comandos uteis do Docker
 

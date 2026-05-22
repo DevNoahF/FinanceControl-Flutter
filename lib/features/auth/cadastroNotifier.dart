@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 import 'package:finance_control/core/auth/auth_service.dart';
+import 'package:finance_control/core/di/service_locator.dart';
+import 'package:finance_control/domain/repositories/usuario_repository.dart';
 import 'package:finance_control/models/Usuario.dart';
 
 
 class CadastroNotifier extends ChangeNotifier {
   final AuthService _authService = authService;
+  IUsuarioRepository get _usuarioRepository => getIt<IUsuarioRepository>();
 
   bool _loading = false;
   String? _erro;
@@ -49,7 +52,10 @@ class CadastroNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _authService.cadastrar(usuario);
+      await _usuarioRepository.insert(
+        usuario.copyWith(senha: Usuario.hashSenha(usuario.senha)),
+      );
+      await _authService.ensureSeed();
       return true;
     } catch (e) {
       _erro = 'Erro ao criar conta. Tente novamente.';

@@ -23,6 +23,7 @@ class _CadastroState extends State<Cadastro> {
   final senhaController          = TextEditingController();
 
   bool _mostrarSenha = false;
+  DateTime? _dataNascimentoSelecionada;
 
   @override
   void dispose() {
@@ -35,22 +36,230 @@ class _CadastroState extends State<Cadastro> {
     super.dispose();
   }
 
+  Future<void> _selecionarDataNascimento() async {
+    final hoje = DateTime.now();
+    final initialDate =
+        _dataNascimentoSelecionada ?? DateTime(hoje.year - 18, hoje.month, hoje.day);
+
+    final selecionada = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: hoje,
+      helpText: 'Selecione sua data de nascimento',
+    );
+
+    if (selecionada == null) return;
+
+    setState(() {
+      _dataNascimentoSelecionada = selecionada;
+      dataNascimentoController.text =
+          '${selecionada.day.toString().padLeft(2, '0')}/${selecionada.month.toString().padLeft(2, '0')}/${selecionada.year}';
+    });
+  }
+
+  Widget _buildIntroPane() {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFF7F6F3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 28,
+        vertical: 36,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'Crie sua conta',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 41,
+              height: 1.04,
+              color: Color(0xFF111111),
+              fontWeight: FontWeight.w400,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: 50),
+          Image.asset(
+            'assets/logo.png',
+            width: 290,
+            fit: BoxFit.contain,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegisterPane() {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF363B43),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 28,
+        vertical: 28,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Cadastre-se',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 34,
+                color: Colors.white,
+                fontWeight: FontWeight.w400,
+                height: 1,
+              ),
+            ),
+            const SizedBox(height: 22),
+            Row(
+              children: [
+                Expanded(
+                  child: _FieldColumn(
+                    label: 'Nome',
+                    controller: nomeController,
+                    validator: (v) => _validarTextoObrigatorio(v, 'Nome'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _FieldColumn(
+                    label: 'Sobrenome',
+                    controller: sobrenomeController,
+                    validator: (v) => _validarTextoObrigatorio(v, 'Sobrenome'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _FieldColumn(
+                    label: 'Profissão',
+                    controller: profissaoController,
+                    validator: (v) => _validarTextoObrigatorio(v, 'Profissão'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _FieldColumn(
+                    label: 'Data de nascimento',
+                    controller: dataNascimentoController,
+                    keyboardType: TextInputType.none,
+                    readOnly: true,
+                    onTap: _selecionarDataNascimento,
+                    validator: _validarDataNascimento,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _FieldColumn(
+              label: 'Email',
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              validator: _validarEmail,
+            ),
+            const SizedBox(height: 14),
+            _FieldColumn(
+              label: 'Senha',
+              controller: senhaController,
+              obscureText: !_mostrarSenha,
+              validator: _validarSenha,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _mostrarSenha ? Icons.visibility_off : Icons.visibility,
+                  color: const Color(0xFF363B43),
+                ),
+                onPressed: () => setState(() => _mostrarSenha = !_mostrarSenha),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Consumer<CadastroNotifier>(
+              builder: (context, notifier, _) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (notifier.erro != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          notifier.erro!,
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    SizedBox(
+                      height: 38,
+                      child: ElevatedButton(
+                        onPressed: notifier.loading ? null : _cadastrar,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF3A3A3A),
+                          elevation: 0,
+                          shape: const StadiumBorder(),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        child: notifier.loading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFF3A3A3A),
+                                ),
+                              )
+                            : const Text('Cadastrar'),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            const Divider(
+              color: Colors.white54,
+              thickness: 1,
+              height: 1,
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => context.go('/login'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Ou faça Login'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Future<void> _cadastrar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final notifier = context.read<CadastroNotifier>();
-
-    final nascimento = notifier.converterDataNascimento(
-      dataNascimentoController.text.trim(),
-    );
-
+    final nascimento = _dataNascimentoSelecionada;
     if (nascimento == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data de nascimento inválida')),
+        const SnackBar(content: Text('Selecione a data de nascimento')),
       );
       return;
     }
+
+    final notifier = context.read<CadastroNotifier>();
 
     final usuario = Usuario(
       id: DateTime.now().millisecondsSinceEpoch,
@@ -97,13 +306,9 @@ class _CadastroState extends State<Cadastro> {
     if (value == null || value.trim().isEmpty) {
       return 'Data de nascimento é obrigatória';
     }
-    final regex = RegExp(r'^\d{2}/\d{2}/\d{4}$');
-    if (!regex.hasMatch(value.trim())) return 'Use o formato dd/mm/aaaa';
-
-    final notifier = context.read<CadastroNotifier>();
-    final data = notifier.converterDataNascimento(value.trim());
-    if (data == null) return 'Data inválida';
-    if (data.isAfter(DateTime.now())) return 'Data não pode ser no futuro';
+    if (_dataNascimentoSelecionada == null) {
+      return 'Selecione uma data válida';
+    }
     return null;
   }
 
@@ -140,226 +345,20 @@ class _CadastroState extends State<Cadastro> {
                         ),
                       ],
                     ),
-                    child: Flex(
-                      direction: isWide ? Axis.horizontal : Axis.vertical,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Expanded(
-                          flex: 5,
-                          child: Container(
-                            color: const Color(0xFFF7F6F3),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 28,
-                              vertical: 36,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Crie sua conta',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 41,
-                                    height: 1.04,
-                                    color: Color(0xFF111111),
-                                    fontWeight: FontWeight.w400,
-                                    letterSpacing: -0.4,
-                                  ),
-                                ),
-                                const SizedBox(height: 50),
-                                Image.asset(
-                                  'assets/logo.png',
-                                  width: 290,
-                                  fit: BoxFit.contain,
-                                ),
-                              ],
-                            ),
+                    child: isWide
+                        ? Row(
+                            children: [
+                              Expanded(flex: 5, child: _buildIntroPane()),
+                              Expanded(flex: 5, child: _buildRegisterPane()),
+                            ],
+                          )
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildIntroPane(),
+                              _buildRegisterPane(),
+                            ],
                           ),
-                        ),
-
-                        Expanded(
-                          flex: 5,
-                          child: Container(
-                            color: const Color(0xFF363B43),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 28,
-                              vertical: 28,
-                            ),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  const Text(
-                                    'Cadastre-se',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 34,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 22),
-
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _FieldColumn(
-                                          label: 'Nome',
-                                          controller: nomeController,
-                                          validator: (v) =>
-                                              _validarTextoObrigatorio(v, 'Nome'),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: _FieldColumn(
-                                          label: 'Sobrenome',
-                                          controller: sobrenomeController,
-                                          validator: (v) =>
-                                              _validarTextoObrigatorio(v, 'Sobrenome'),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  const SizedBox(height: 14),
-
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _FieldColumn(
-                                          label: 'Profissão',
-                                          controller: profissaoController,
-                                          validator: (v) =>
-                                              _validarTextoObrigatorio(v, 'Profissão'),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: _FieldColumn(
-                                          label: 'Data de nascimento',
-                                          controller: dataNascimentoController,
-                                          keyboardType: TextInputType.datetime,
-                                          validator: _validarDataNascimento,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  const SizedBox(height: 14),
-
-                                  _FieldColumn(
-                                    label: 'Email',
-                                    controller: emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: _validarEmail,
-                                  ),
-
-                                  const SizedBox(height: 14),
-
-                                  _FieldColumn(
-                                    label: 'Senha',
-                                    controller: senhaController,
-                                    obscureText: !_mostrarSenha,
-                                    validator: _validarSenha,
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _mostrarSenha
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        color: const Color(0xFF363B43),
-                                      ),
-                                      onPressed: () => setState(
-                                        () => _mostrarSenha = !_mostrarSenha,
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 20),
-
-                                  Consumer<CadastroNotifier>(
-                                    builder: (context, notifier, _) {
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          if (notifier.erro != null)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 10,
-                                              ),
-                                              child: Text(
-                                                notifier.erro!,
-                                                style: const TextStyle(
-                                                  color: Colors.redAccent,
-                                                  fontSize: 13,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-
-                                          SizedBox(
-                                            height: 38,
-                                            child: ElevatedButton(
-                                              onPressed: notifier.loading
-                                                  ? null
-                                                  : _cadastrar,
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.white,
-                                                foregroundColor:
-                                                    const Color(0xFF3A3A3A),
-                                                elevation: 0,
-                                                shape: const StadiumBorder(),
-                                                textStyle: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                              ),
-                                              child: notifier.loading
-                                                  ? const SizedBox(
-                                                      width: 18,
-                                                      height: 18,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                        color: Color(0xFF3A3A3A),
-                                                      ),
-                                                    )
-                                                  : const Text('Cadastrar'),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-
-                                  const SizedBox(height: 16),
-
-                                  const Divider(
-                                    color: Colors.white54,
-                                    thickness: 1,
-                                    height: 1,
-                                  ),
-
-                                  const SizedBox(height: 10),
-
-                                  TextButton(
-                                    onPressed: () => context.go('/login'),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: Colors.white,
-                                    ),
-                                    child: const Text('Ou faça Login'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   );
                 },
               ),
@@ -380,6 +379,8 @@ class _FieldColumn extends StatelessWidget {
     this.keyboardType,
     this.obscureText = false,
     this.suffixIcon,
+    this.readOnly = false,
+    this.onTap,
   });
 
   final String label;
@@ -388,6 +389,8 @@ class _FieldColumn extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool obscureText;
   final Widget? suffixIcon;
+  final bool readOnly;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -407,6 +410,8 @@ class _FieldColumn extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
+          readOnly: readOnly,
+          onTap: onTap,
           validator: validator,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           decoration: InputDecoration(

@@ -3,25 +3,42 @@ import 'package:go_router/go_router.dart';
 
 import '../models/transacao.dart';
 import '../components/menuDropdown.dart';
-import '../data/transacoes_data.dart';
 import '../core/auth/auth_service.dart';
+import '../core/di/service_locator.dart';
+import '../domain/repositories/transacao_repository.dart';
 
 class HomeController extends ChangeNotifier {
-  List<Transacao> get listaTransacoes => transacoes;
+  ITransacaoRepository get _transacaoRepository => getIt<ITransacaoRepository>();
 
-  double get totalEntradas => transacoes
+  List<Transacao> _listaTransacoes = [];
+
+  List<Transacao> get listaTransacoes => _listaTransacoes;
+
+  Future<void> carregarTransacoes() async {
+    final usuarioId = authService.usuarioLogado?.id;
+    if (usuarioId == null) {
+      _listaTransacoes = [];
+      notifyListeners();
+      return;
+    }
+
+    _listaTransacoes = await _transacaoRepository.getByUserId(usuarioId);
+    notifyListeners();
+  }
+
+    double get totalEntradas => _listaTransacoes
       .where((t) => t.isEntrada)
       .fold(0, (sum, t) => sum + t.valor);
 
-  double get totalSaidas => transacoes
+    double get totalSaidas => _listaTransacoes
       .where((t) => !t.isEntrada)
       .fold(0, (sum, t) => sum + t.valor);
 
   double get restante => totalEntradas - totalSaidas;
 
   void excluirTransacao(int index) {
-    transacoes.removeAt(index);
-    notifyListeners();
+    final transacao = _listaTransacoes[index];
+    _transacaoRepository.delete(transacao.id).then((_) => carregarTransacoes());
   }
 
   void editarTransacao({
@@ -31,14 +48,15 @@ class HomeController extends ChangeNotifier {
     required double valor,
     required bool isEntrada,
   }) {
-    transacoes[index] = Transacao(
-      titulo: titulo,
-      descricao: descricao,
-      valor: valor,
-      isEntrada: isEntrada,
-    );
-
-    notifyListeners();
+    final transacaoAntiga = _listaTransacoes[index];
+    _transacaoRepository.update(
+      transacaoAntiga.copyWith(
+        titulo: titulo,
+        descricao: descricao,
+        valor: valor,
+        tipo: isEntrada ? 'entrada' : 'saida',
+      ),
+    ).then((_) => carregarTransacoes());
   }
 }
 
@@ -51,6 +69,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final HomeController controller = HomeController();
+
+  @override
+  void initState() {
+    super.initState();
+    controller.carregarTransacoes();
+  }
 
   void _editarTransacao(int index) {
     final transacao = controller.listaTransacoes[index];

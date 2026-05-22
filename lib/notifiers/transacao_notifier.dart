@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
+import 'package:finance_control/core/auth/auth_service.dart';
+import 'package:finance_control/core/di/service_locator.dart';
+import 'package:finance_control/domain/repositories/transacao_repository.dart';
 import '../models/transacao.dart';
-import '../data/transacoes_data.dart';
 
 /// ChangeNotifier responsável por toda a lógica de transações.
 class TransacaoNotifier extends ChangeNotifier {
   bool _loading = false;
   String? _erro;
+
+  ITransacaoRepository get _transacaoRepository => getIt<ITransacaoRepository>();
 
   bool get loading => _loading;
   String? get erro => _erro;
@@ -39,9 +43,16 @@ class TransacaoNotifier extends ChangeNotifier {
 
     try {
       final valor = double.parse(valorRaw.replaceAll(',', '.'));
+      final usuarioId = authService.usuarioLogado?.id;
 
-      transacoes.add(
+      if (usuarioId == null) {
+        _erro = 'Faça login novamente para salvar a transação.';
+        return false;
+      }
+
+      await _transacaoRepository.insert(
         Transacao(
+          userId: usuarioId,
           titulo: titulo,
           descricao: descricao,
           valor: valor,

@@ -9,7 +9,9 @@ No estado atual existem duas camadas de persistencia preparadas no projeto:
 1. SQLite local, criado em `lib/data/database/app_database.dart`.
 2. MySQL via Docker, criado por `docker-compose.yaml` e inicializado com `docker/mysql/init.sql`.
 
-A app Flutter ainda nao esta ligada ao MySQL do Docker para gravar dados em tempo real. O codigo de tela e os notifiers continuam usando a logica atual em memoria, enquanto a infraestrutura de banco foi deixada pronta para evolucao.
+A app Flutter nao grava direto no MySQL do Docker. O banco que o app usa na pratica é o SQLite local.
+
+No navegador, esse SQLite usa suporte web do `sqflite`. Para funcionar bem, ele precisa dos binarios auxiliares do worker. Quando isso nao esta configurado, o app pode abrir a pagina e mostrar so a barra superior, ou ficar em branco, porque a inicializacao do banco falha antes do restante da tela montar.
 
 ## O Que Ja Esta Pronto
 
@@ -17,7 +19,8 @@ A app Flutter ainda nao esta ligada ao MySQL do Docker para gravar dados em temp
 - A senha usa hash simples com SHA-256 no fluxo de autenticacao.
 - O SQLite local ja tem helper com `openDatabase()`, `PRAGMA foreign_keys = ON`, tabelas e indices.
 - O Docker sobe MySQL 8 e cria automaticamente as tabelas base do schema.
-- Existe separacao inicial entre dominio e infraestrutura com interfaces em `lib/domain/repositories` e implementacoes em `lib/data/repositories`.
+- Existe separacao entre dominio e infraestrutura com interfaces em `lib/domain/repositories` e implementacoes em `lib/data/repositories`.
+- Os repositórios em memoria que eu tinha criado foram apenas um atalho temporario para testar o navegador e explicar o problema; eles foram removidos para manter o codigo limpo.
 
 ## Estrutura Do MySQL No Docker
 
@@ -43,9 +46,9 @@ Indices principais:
 ## O Que Ainda Nao Esta Integrado
 
 - A app nao usa o MySQL do Docker como banco de execucao.
-- O `main.dart` ainda nao chama o `configureDependencies()` do GetIt.
-- Os repositrios SQLite existem, mas ainda nao tem CRUD implementado.
+- O banco do Docker nao recebe os dados da interface automaticamente.
 - Nao existe sincronizacao entre SQLite local e MySQL.
+- No web, a persistencia depende dos binarios do `sqflite`; sem eles o app pode nao desenhar a tela inteira.
 
 ## Como Ver O Banco Docker
 
@@ -77,6 +80,7 @@ docker exec financeControl_mysql mysql -ufinance_user -proot finance_control -e 
 
 ## Resumo Pratico
 
-Se voce inserir dados pela interface hoje, eles ainda nao vao para o MySQL do Docker.
+Se voce inserir dados pela interface hoje, eles vao para o SQLite local da app.
 O Docker esta servindo como base de schema e inspecao agora.
-O proximo passo, quando voce quiser, e ligar os providers ao GetIt e trocar a persistencia da app para os repositrios reais.
+Se o navegador abrir branco ou mostrar so a faixa superior, isso normalmente quer dizer que o SQLite web nao inicializou direito.
+O jeito mais seguro de demonstrar o app, neste estado, é usar desktop ou ajustar o suporte web do `sqflite`.
