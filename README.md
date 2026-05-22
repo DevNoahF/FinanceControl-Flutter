@@ -1,6 +1,13 @@
 # Finance Control
 
-Aplicativo Flutter para controle financeiro, com banco de dados MySQL rodando via Docker.
+Aplicativo Flutter para controle financeiro.
+
+Estado atual da persistência:
+- a interface e os notifiers ainda operam em memória;
+- a camada de SQLite local já existe em `lib/data/database` com schema e mappers preparados;
+- o MySQL via Docker sobe com schema criado automaticamente, mas ainda nao recebe dados da app.
+
+Para entender a estrutura de banco e o que esta ativo agora, leia [docs/database.md](docs/database.md).
 
 ## Pre-requisitos
 
@@ -69,7 +76,7 @@ flutter run
 
 ## Dados do banco
 
-Com a configuracao padrao do `.env.example`, o banco fica assim:
+Com a configuracao padrao do `.env.example`, o banco MySQL do Docker fica assim:
 
 ```text
 Host: localhost
@@ -86,6 +93,8 @@ MYSQL_PORT=3307
 ```
 
 Nesse caso, a conexao pelo seu computador deve usar a porta `3307`.
+
+Observacao importante: esse banco do Docker esta preparado para schema e inspeção, mas a app Flutter ainda nao grava nele diretamente.
 
 ## Comandos uteis do Docker
 
@@ -127,3 +136,7 @@ docker compose up -d
 ```
 
 Use esse comando somente se puder perder os dados locais do banco.
+
+## Documentacao complementar
+
+- [docs/database.md](docs/database.md) explica a arquitetura de persistencia atual, o schema e a diferenca entre SQLite local e MySQL no Docker.
