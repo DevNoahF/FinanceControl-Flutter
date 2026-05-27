@@ -5,6 +5,7 @@ import 'package:finance_control/core/di/service_locator.dart';
 import 'package:finance_control/core/router/app_router.dart';
 import 'package:finance_control/features/auth/cadastroNotifier.dart';
 import 'package:finance_control/notifiers/admin_notifier.dart';
+import 'package:finance_control/notifiers/transacao_api_notifier.dart';
 import 'package:finance_control/notifiers/transacao_notifier.dart';
 import 'package:finance_control/notifiers/user_notifier.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TransacaoNotifier()),
         ChangeNotifierProvider(create: (_) => UserNotifier()),
         ChangeNotifierProvider(create: (_) => AdminNotifier()),
+        ChangeNotifierProvider(create: (_) => TransacaoApiNotifier()),
       ],
       child: MaterialApp.router(
         title: 'Finanças',

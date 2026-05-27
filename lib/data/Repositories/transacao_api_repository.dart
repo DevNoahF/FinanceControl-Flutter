@@ -24,6 +24,7 @@ class TransacaoApiRepository {
               .map((item) => Transacao.fromJson(item as Map<String, dynamic>))
               .toList();
         } catch (_) {
+          // se der erro no cache, busca na API
         }
       }
     }
@@ -44,6 +45,7 @@ class TransacaoApiRepository {
         try {
           return Transacao.fromJson(cached);
         } catch (_) {
+          // se der erro no cache, busca na API
         }
       }
     }
