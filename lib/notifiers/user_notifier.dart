@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:finance_control/data/cache/cache_service.dart';
+import 'package:finance_control/data/exceptions/api_exceptions.dart';
 import 'package:finance_control/data/repositories/user_api_repository.dart';
 import 'package:finance_control/data/services/api_client.dart';
 import 'package:finance_control/data/services/user_service.dart';
@@ -37,7 +38,17 @@ class UserNotifier extends ChangeNotifier {
     try {
       final repo = await _getRepository();
       _usuarios = await repo.getUsers(forceRefresh: forceRefresh);
-    } catch (e) {
+    } on NetworkException {
+      _erro = 'Sem conexao. Tente novamente.';
+    } on UnauthorizedException {
+      _erro = 'Acesso nao autorizado.';
+    } on NotFoundException {
+      _erro = 'Usuarios nao encontrados.';
+    } on FormatException {
+      _erro = 'Erro ao ler dados do servidor.';
+    } on ApiException catch (e) {
+      _erro = e.message;
+    } catch (_) {
       _erro = 'Erro ao carregar usuarios.';
     } finally {
       _loading = false;
@@ -53,7 +64,17 @@ class UserNotifier extends ChangeNotifier {
     try {
       final repo = await _getRepository();
       _selecionado = await repo.getUserById(id, forceRefresh: forceRefresh);
-    } catch (e) {
+    } on NetworkException {
+      _erro = 'Sem conexao. Tente novamente.';
+    } on UnauthorizedException {
+      _erro = 'Acesso nao autorizado.';
+    } on NotFoundException {
+      _erro = 'Usuario nao encontrado.';
+    } on FormatException {
+      _erro = 'Erro ao ler dados do servidor.';
+    } on ApiException catch (e) {
+      _erro = e.message;
+    } catch (_) {
       _erro = 'Erro ao carregar usuario.';
     } finally {
       _loading = false;

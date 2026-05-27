@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:finance_control/data/exceptions/api_exceptions.dart';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
@@ -27,11 +29,11 @@ class ApiClient {
           .timeout(timeout);
       return _decodeResponse(response);
     } on TimeoutException {
-      throw Exception('Tempo de requisicao esgotado');
+      throw const NetworkException('Tempo de requisicao esgotado');
     } on SocketException {
-      throw Exception('Sem conexao com a internet');
+      throw const NetworkException('Sem conexao com a internet');
     } on http.ClientException catch (e) {
-      throw Exception(e.message);
+      throw NetworkException(e.message);
     }
   }
 
@@ -51,11 +53,11 @@ class ApiClient {
           .timeout(timeout);
       return _decodeResponse(response);
     } on TimeoutException {
-      throw Exception('Tempo de requisicao esgotado');
+      throw const NetworkException('Tempo de requisicao esgotado');
     } on SocketException {
-      throw Exception('Sem conexao com a internet');
+      throw const NetworkException('Sem conexao com a internet');
     } on http.ClientException catch (e) {
-      throw Exception(e.message);
+      throw NetworkException(e.message);
     }
   }
 
@@ -75,11 +77,11 @@ class ApiClient {
           .timeout(timeout);
       return _decodeResponse(response);
     } on TimeoutException {
-      throw Exception('Tempo de requisicao esgotado');
+      throw const NetworkException('Tempo de requisicao esgotado');
     } on SocketException {
-      throw Exception('Sem conexao com a internet');
+      throw const NetworkException('Sem conexao com a internet');
     } on http.ClientException catch (e) {
-      throw Exception(e.message);
+      throw NetworkException(e.message);
     }
   }
 
@@ -94,11 +96,11 @@ class ApiClient {
           .timeout(timeout);
       return _decodeResponse(response);
     } on TimeoutException {
-      throw Exception('Tempo de requisicao esgotado');
+      throw const NetworkException('Tempo de requisicao esgotado');
     } on SocketException {
-      throw Exception('Sem conexao com a internet');
+      throw const NetworkException('Sem conexao com a internet');
     } on http.ClientException catch (e) {
-      throw Exception(e.message);
+      throw NetworkException(e.message);
     }
   }
 
@@ -127,7 +129,17 @@ class ApiClient {
 
     final decoded = body.isEmpty ? null : _tryDecode(body);
     final statusCode = response.statusCode;
-    throw Exception('Request failed ($statusCode): $decoded');
+    if (statusCode == 401 || statusCode == 403) {
+      throw UnauthorizedException(statusCode: statusCode, body: decoded);
+    }
+    if (statusCode == 404) {
+      throw NotFoundException(statusCode: statusCode, body: decoded);
+    }
+    throw ApiException(
+      message: 'Request failed',
+      statusCode: statusCode,
+      body: decoded,
+    );
   }
 
   dynamic _tryDecode(String body) {

@@ -45,7 +45,7 @@ class UserApiRepository {
         try {
           return Usuario.fromJson(cached);
         } catch (_) {
-          // ignore and fetch from API
+          
         }
       }
     }
