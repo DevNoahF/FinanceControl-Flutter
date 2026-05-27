@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
@@ -20,10 +21,18 @@ class ApiClient {
     Map<String, String>? queryParameters,
   }) async {
     final uri = _buildUri(endpoint, queryParameters);
-    final response = await _client
-        .get(uri, headers: _mergeHeaders(headers))
-        .timeout(timeout);
-    return _decodeResponse(response);
+    try {
+      final response = await _client
+          .get(uri, headers: _mergeHeaders(headers))
+          .timeout(timeout);
+      return _decodeResponse(response);
+    } on TimeoutException {
+      throw Exception('Tempo de requisicao esgotado');
+    } on SocketException {
+      throw Exception('Sem conexao com a internet');
+    } on http.ClientException catch (e) {
+      throw Exception(e.message);
+    }
   }
 
   Future<dynamic> post(
@@ -32,14 +41,22 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     final uri = _buildUri(endpoint, null);
-    final response = await _client
-        .post(
-          uri,
-          headers: _mergeHeaders(headers),
-          body: jsonEncode(body),
-        )
-        .timeout(timeout);
-    return _decodeResponse(response);
+    try {
+      final response = await _client
+          .post(
+            uri,
+            headers: _mergeHeaders(headers),
+            body: jsonEncode(body),
+          )
+          .timeout(timeout);
+      return _decodeResponse(response);
+    } on TimeoutException {
+      throw Exception('Tempo de requisicao esgotado');
+    } on SocketException {
+      throw Exception('Sem conexao com a internet');
+    } on http.ClientException catch (e) {
+      throw Exception(e.message);
+    }
   }
 
   Future<dynamic> put(
@@ -48,14 +65,22 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     final uri = _buildUri(endpoint, null);
-    final response = await _client
-        .put(
-          uri,
-          headers: _mergeHeaders(headers),
-          body: jsonEncode(body),
-        )
-        .timeout(timeout);
-    return _decodeResponse(response);
+    try {
+      final response = await _client
+          .put(
+            uri,
+            headers: _mergeHeaders(headers),
+            body: jsonEncode(body),
+          )
+          .timeout(timeout);
+      return _decodeResponse(response);
+    } on TimeoutException {
+      throw Exception('Tempo de requisicao esgotado');
+    } on SocketException {
+      throw Exception('Sem conexao com a internet');
+    } on http.ClientException catch (e) {
+      throw Exception(e.message);
+    }
   }
 
   Future<dynamic> delete(
@@ -63,10 +88,18 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     final uri = _buildUri(endpoint, null);
-    final response = await _client
-        .delete(uri, headers: _mergeHeaders(headers))
-        .timeout(timeout);
-    return _decodeResponse(response);
+    try {
+      final response = await _client
+          .delete(uri, headers: _mergeHeaders(headers))
+          .timeout(timeout);
+      return _decodeResponse(response);
+    } on TimeoutException {
+      throw Exception('Tempo de requisicao esgotado');
+    } on SocketException {
+      throw Exception('Sem conexao com a internet');
+    } on http.ClientException catch (e) {
+      throw Exception(e.message);
+    }
   }
 
   Uri _buildUri(String endpoint, Map<String, String>? queryParameters) {
@@ -93,11 +126,8 @@ class ApiClient {
     }
 
     final decoded = body.isEmpty ? null : _tryDecode(body);
-    throw ApiClientException(
-      statusCode: response.statusCode,
-      message: 'Request failed',
-      body: decoded,
-    );
+    final statusCode = response.statusCode;
+    throw Exception('Request failed ($statusCode): $decoded');
   }
 
   dynamic _tryDecode(String body) {
@@ -109,19 +139,3 @@ class ApiClient {
   }
 }
 
-class ApiClientException implements Exception {
-  final int statusCode;
-  final String message;
-  final dynamic body;
-
-  const ApiClientException({
-    required this.statusCode,
-    required this.message,
-    this.body,
-  });
-
-  @override
-  String toString() {
-    return 'ApiClientException($statusCode): $message';
-  }
-}
