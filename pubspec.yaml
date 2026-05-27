@@ -37,8 +37,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   crypto: ^3.0.6
   get_it: ^9.2.1
+  http: ^1.2.2
   path: ^1.9.1
   provider: ^6.1.5+1
+  shared_preferences: ^2.3.2
   sqflite_common_ffi: ^2.4.0
   sqflite_common_ffi_web: ^0.4.0
   sqflite: ^2.4.2+1
