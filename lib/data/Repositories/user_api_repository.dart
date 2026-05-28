@@ -24,7 +24,6 @@ class UserApiRepository {
               .map((item) => Usuario.fromJson(item as Map<String, dynamic>))
               .toList();
         } catch (_) {
-          // ignore and fetch from API
         }
       }
     }
