@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:finance_control/adapter/services/auth/auth_service.dart';
-import 'package:finance_control/core/dependencyInjection/serviceLocationDI.dart';
+import 'package:finance_control/core/auth/auth_service.dart';
+import 'package:finance_control/core/di/service_locator.dart';
 import 'package:finance_control/domain/repositories/usuario_repository.dart';
 import 'package:finance_control/models/Usuario.dart';
 
