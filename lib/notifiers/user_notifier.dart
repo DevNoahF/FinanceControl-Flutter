@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:finance_control/data/cache/cache_service.dart';
+import 'package:finance_control/core/di/service_locator.dart';
 import 'package:finance_control/data/exceptions/api_exceptions.dart';
 import 'package:finance_control/data/repositories/user_api_repository.dart';
-import 'package:finance_control/data/services/api_client.dart';
-import 'package:finance_control/data/services/user_service.dart';
 import 'package:finance_control/models/Usuario.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class UserNotifier extends ChangeNotifier {
   bool _loading = false;
@@ -20,14 +17,8 @@ class UserNotifier extends ChangeNotifier {
   List<Usuario> get usuarios => _usuarios;
   Usuario? get selecionado => _selecionado;
 
-  Future<UserApiRepository> _getRepository() async {
-    if (_repository != null) return _repository!;
-    final prefs = await SharedPreferences.getInstance();
-    final cache = CacheService(prefs);
-    final client = ApiClient(baseUrl: 'https://jsonplaceholder.typicode.com');
-    final service = UserService(client);
-    _repository = UserApiRepository(service: service, cache: cache);
-    return _repository!;
+  UserApiRepository _getRepository() {
+    return _repository ??= getIt<UserApiRepository>();
   }
 
   Future<void> fetchUsers({bool forceRefresh = false}) async {
@@ -36,7 +27,7 @@ class UserNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final repo = await _getRepository();
+      final repo = _getRepository();
       _usuarios = await repo.getUsers(forceRefresh: forceRefresh);
     } on NetworkException {
       _erro = 'Sem conexao. Tente novamente.';
@@ -62,7 +53,7 @@ class UserNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final repo = await _getRepository();
+      final repo = _getRepository();
       _selecionado = await repo.getUserById(id, forceRefresh: forceRefresh);
     } on NetworkException {
       _erro = 'Sem conexao. Tente novamente.';

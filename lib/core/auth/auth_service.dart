@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:finance_control/core/di/service_locator.dart';
+import 'package:finance_control/data/session/api_session.dart';
 import 'package:finance_control/domain/repositories/usuario_repository.dart';
 import 'package:finance_control/models/Usuario.dart';
 
@@ -64,6 +67,9 @@ class AuthService extends ChangeNotifier {
   void logout() {
     _usuarioLogado = null;
     _updateAuth(false);
+    if (getIt.isRegistered<ApiSession>()) {
+      unawaited(getIt<ApiSession>().clear());
+    }
   }
 
   void _updateAuth(bool value) {

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:finance_control/data/cache/cache_service.dart';
+import 'package:finance_control/core/di/service_locator.dart';
 import 'package:finance_control/data/exceptions/api_exceptions.dart';
 import 'package:finance_control/data/repositories/transacao_api_repository.dart';
-import 'package:finance_control/data/services/api_client.dart';
-import 'package:finance_control/data/services/transacao_service.dart';
 import 'package:finance_control/models/transacao.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class TransacaoApiNotifier extends ChangeNotifier {
   bool _loading = false;
@@ -20,14 +17,8 @@ class TransacaoApiNotifier extends ChangeNotifier {
   List<Transacao> get transacoes => _transacoes;
   Transacao? get selecionada => _selecionada;
 
-  Future<TransacaoApiRepository> _getRepository() async {
-    if (_repository != null) return _repository!;
-    final prefs = await SharedPreferences.getInstance();
-    final cache = CacheService(prefs);
-    final client = ApiClient(baseUrl: 'https://jsonplaceholder.typicode.com');
-    final service = TransacaoService(client);
-    _repository = TransacaoApiRepository(service: service, cache: cache);
-    return _repository!;
+  TransacaoApiRepository _getRepository() {
+    return _repository ??= getIt<TransacaoApiRepository>();
   }
 
   Future<void> fetchTransacoes({bool forceRefresh = false}) async {
@@ -36,7 +27,7 @@ class TransacaoApiNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final repo = await _getRepository();
+      final repo = _getRepository();
       _transacoes = await repo.getTransacoes(forceRefresh: forceRefresh);
     } on NetworkException {
       _erro = 'Sem conexao. Tente novamente.';
@@ -62,7 +53,7 @@ class TransacaoApiNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final repo = await _getRepository();
+      final repo = _getRepository();
       _selecionada = await repo.getTransacaoById(
         id,
         forceRefresh: forceRefresh,

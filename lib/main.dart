@@ -29,7 +29,7 @@ Future<void> main() async {
       defaultTargetPlatform == TargetPlatform.macOS) {
     databaseFactory = databaseFactoryFfi;
   }
-  configureDependencies();
+  await configureDependencies();
   await authService.ensureSeed();
   runApp(const MyApp());
 }

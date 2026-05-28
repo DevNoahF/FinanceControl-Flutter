@@ -9,11 +9,15 @@ class ApiClient {
   final String baseUrl;
   final http.Client _client;
   final Duration timeout;
+  final String? Function()? tokenProvider;
+  final FutureOr<void> Function()? onUnauthorized;
 
   ApiClient({
     required this.baseUrl,
     http.Client? client,
     Duration? timeout,
+    this.tokenProvider,
+    this.onUnauthorized,
   })  : _client = client ?? http.Client(),
         timeout = timeout ?? const Duration(seconds: 15);
 
@@ -24,10 +28,11 @@ class ApiClient {
   }) async {
     final uri = _buildUri(endpoint, queryParameters);
     try {
+      final requestHeaders = await _mergeHeaders(headers);
       final response = await _client
-          .get(uri, headers: _mergeHeaders(headers))
+          .get(uri, headers: requestHeaders)
           .timeout(timeout);
-      return _decodeResponse(response);
+      return await _decodeResponse(response);
     } on TimeoutException {
       throw const NetworkException('Tempo de requisicao esgotado');
     } on SocketException {
@@ -44,14 +49,15 @@ class ApiClient {
   }) async {
     final uri = _buildUri(endpoint, null);
     try {
+      final requestHeaders = await _mergeHeaders(headers);
       final response = await _client
           .post(
             uri,
-            headers: _mergeHeaders(headers),
+            headers: requestHeaders,
             body: jsonEncode(body),
           )
           .timeout(timeout);
-      return _decodeResponse(response);
+      return await _decodeResponse(response);
     } on TimeoutException {
       throw const NetworkException('Tempo de requisicao esgotado');
     } on SocketException {
@@ -68,14 +74,15 @@ class ApiClient {
   }) async {
     final uri = _buildUri(endpoint, null);
     try {
+      final requestHeaders = await _mergeHeaders(headers);
       final response = await _client
           .put(
             uri,
-            headers: _mergeHeaders(headers),
+            headers: requestHeaders,
             body: jsonEncode(body),
           )
           .timeout(timeout);
-      return _decodeResponse(response);
+      return await _decodeResponse(response);
     } on TimeoutException {
       throw const NetworkException('Tempo de requisicao esgotado');
     } on SocketException {
@@ -91,10 +98,11 @@ class ApiClient {
   }) async {
     final uri = _buildUri(endpoint, null);
     try {
+      final requestHeaders = await _mergeHeaders(headers);
       final response = await _client
-          .delete(uri, headers: _mergeHeaders(headers))
+        .delete(uri, headers: requestHeaders)
           .timeout(timeout);
-      return _decodeResponse(response);
+      return await _decodeResponse(response);
     } on TimeoutException {
       throw const NetworkException('Tempo de requisicao esgotado');
     } on SocketException {
@@ -113,14 +121,16 @@ class ApiClient {
     return resolved.replace(queryParameters: queryParameters);
   }
 
-  Map<String, String> _mergeHeaders(Map<String, String>? headers) {
+  Future<Map<String, String>> _mergeHeaders(Map<String, String>? headers) async {
+    final token = tokenProvider == null ? null : tokenProvider!();
     return {
       'Content-Type': 'application/json',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       if (headers != null) ...headers,
     };
   }
 
-  dynamic _decodeResponse(http.Response response) {
+  Future<dynamic> _decodeResponse(http.Response response) async {
     final body = response.body.trim();
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (body.isEmpty) return null;
@@ -130,6 +140,9 @@ class ApiClient {
     final decoded = body.isEmpty ? null : _tryDecode(body);
     final statusCode = response.statusCode;
     if (statusCode == 401 || statusCode == 403) {
+      if (onUnauthorized != null) {
+        await onUnauthorized!();
+      }
       throw UnauthorizedException(statusCode: statusCode, body: decoded);
     }
     if (statusCode == 404) {
