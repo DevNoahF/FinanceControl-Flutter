@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "flutter run chrome fixed port",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"run",
+				"-d",
+				"chrome",
+				"--web-hostname=127.0.0.1",
+				"--web-port=8080"
+			],
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}
